@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>जैन-पाठशाला — श्री अरिहंत विकास समिति</title>
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#2d0a0f;color:#fff;min-height:100vh;display:flex;flex-direction:column;font-size:14px;}
+
+/* ===== VARIABLES ===== */
+:root{
+  --m:#6B0F1A;--md:#4A0A12;--ml:#8B1A2A;--mx:#3a0810;
+  --g:#FFD700;--gl:#FFE566;--gd:#cc9900;
+  --white:#fff;--muted:rgba(255,255,255,0.65);--faint:rgba(255,255,255,0.15);
+  --green:#27ae60;--red:#c0392b;--orange:#e67e22;
+  --radius:10px;--shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ===== HEADER ===== */
+#appHeader{
+  background:var(--mx);border-bottom:3px solid var(--g);
+  padding:10px 20px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:100;
+}
+#appHeader .logo{width:48px;height:48px;border:2px solid var(--g);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+#appHeader h1{font-size:20px;color:var(--g);font-weight:700;line-height:1.2;}
+#appHeader p{font-size:11px;color:var(--muted);margin-top:2px;}
+#logoutBtn{margin-left:auto;padding:7px 14px;border-radius:20px;border:1.5px solid var(--red);
+  background:transparent;color:#ff6b6b;cursor:pointer;font-size:12px;font-weight:600;
+  transition:all .2s;display:none;}
+#logoutBtn:hover{background:var(--red);color:#fff;}
+
+/* ===== NAV ===== */
+#mainNav{
+  background:var(--md);border-bottom:2px solid var(--g);
+  padding:0 16px;display:none;overflow-x:auto;
+  scrollbar-width:none;white-space:nowrap;
+}
+#mainNav::-webkit-scrollbar{display:none;}
+#mainNav button{
+  padding:12px 16px;border:none;background:transparent;color:var(--muted);
+  font-size:13px;cursor:pointer;border-bottom:3px solid transparent;
+  transition:all .2s;font-weight:500;white-space:nowrap;
+}
+#mainNav button:hover{color:var(--g);}
+#mainNav button.active{color:var(--g);border-bottom-color:var(--g);font-weight:700;}
+
+/* ===== MAIN CONTENT ===== */
+#appContent{flex:1;padding:20px;max-width:960px;margin:0 auto;width:100%;}
+
+/* ===== SECTIONS ===== */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--ml);border:1.5px solid rgba(255,215,0,0.35);
+  border-radius:var(--radius);padding:20px;margin-bottom:16px;
+}
+.card-title{
+  font-size:15px;font-weight:700;color:var(--g);
+  margin-bottom:16px;display:flex;align-items:center;gap:8px;
+  padding-bottom:10px;border-bottom:1px solid rgba(255,215,0,0.2);
+}
+.card-title .icon{font-size:18px;}
+
+/* ===== STAT CARDS ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px;}
+.stat-card{
+  background:var(--md);border:1.5px solid rgba(255,215,0,0.3);
+  border-radius:var(--radius);padding:16px 12px;text-align:center;
+}
+.stat-num{font-size:30px;font-weight:700;color:var(--g);}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* ===== FORMS ===== */
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+input,select,textarea{
+  width:100%;padding:9px 12px;border-radius:7px;
+  border:1.5px solid rgba(255,215,0,0.3);
+  background:var(--md);color:#fff;font-size:13px;
+  outline:none;transition:border-color .2s;
+}
+input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(255,215,0,0.1);}
+select option{background:#3a0810;}
+input::placeholder{color:rgba(255,255,255,0.3);}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:9px 20px;border-radius:7px;border:1.5px solid var(--g);
+  cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--g);color:var(--md);}
+.btn-primary:hover{background:var(--gl);}
+.btn-outline{background:transparent;color:var(--g);}
+.btn-outline:hover{background:rgba(255,215,0,0.1);}
+.btn-danger{background:transparent;color:#ff6b6b;border-color:#c0392b;padding:6px 12px;font-size:12px;}
+.btn-danger:hover{background:#c0392b;color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-block{width:100%;justify-content:center;margin-top:6px;}
+
+/* ===== BADGE ===== */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-gold{background:rgba(255,215,0,0.2);color:var(--g);border:1px solid rgba(255,215,0,0.4);}
+.badge-green{background:rgba(39,174,96,0.2);color:#58d68d;border:1px solid rgba(39,174,96,0.4);}
+.badge-red{background:rgba(192,57,43,0.2);color:#ec7063;border:1px solid rgba(192,57,43,0.4);}
+.badge-orange{background:rgba(230,126,34,0.2);color:#f39c12;border:1px solid rgba(230,126,34,0.4);}
+.badge-gray{background:rgba(255,255,255,0.1);color:var(--muted);border:1px solid rgba(255,255,255,0.2);}
+
+/* ===== TABLE ===== */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid rgba(255,215,0,0.2);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--md);color:var(--g);padding:10px 12px;text-align:left;font-weight:600;font-size:12px;white-space:nowrap;}
+td{padding:9px 12px;border-top:1px solid rgba(255,215,0,0.1);color:#fff;vertical-align:middle;}
+tr:hover td{background:rgba(255,215,0,0.04);}
+.empty-row td{text-align:center;color:var(--muted);padding:24px;}
+
+/* ===== PIN PAD ===== */
+.pin-display{display:flex;gap:10px;margin-bottom:16px;justify-content:center;}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--g);background:transparent;
+  transition:background .15s;
+}
+.pin-dot.filled{background:var(--g);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto;}
+.pin-key{
+  padding:14px;border-radius:8px;border:1.5px solid rgba(255,215,0,0.3);
+  background:var(--md);color:var(--g);font-size:18px;font-weight:600;
+  cursor:pointer;text-align:center;transition:all .15s;user-select:none;
+}
+.pin-key:hover{background:rgba(255,215,0,0.15);border-color:var(--g);}
+.pin-key:active{transform:scale(0.94);background:var(--g);color:var(--md);}
+.pin-key.del{font-size:14px;color:var(--muted);}
+.pin-key.ok{background:rgba(255,215,0,0.15);color:var(--g);}
+
+/* ===== TABS ===== */
+.login-tabs{display:flex;border-bottom:2px solid rgba(255,215,0,0.3);margin-bottom:0;}
+.login-tab{
+  flex:1;padding:11px 8px;text-align:center;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--muted);
+  border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;
+}
+.login-tab:hover{color:var(--g);}
+.login-tab.active{color:var(--g);border-bottom-color:var(--g);}
+.login-pane{display:none;padding-top:18px;}
+.login-pane.active{display:block;}
+
+/* ===== ATTENDANCE BUTTONS ===== */
+.att-trio{display:flex;gap:4px;}
+.att-btn{
+  padding:5px 10px;border-radius:5px;border:1.5px solid;
+  cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;opacity:0.4;
+}
+.att-btn.active{opacity:1;}
+.att-p{background:rgba(39,174,96,0.2);color:#58d68d;border-color:var(--green);}
+.att-p.active{background:var(--green);color:#fff;}
+.att-a{background:rgba(192,57,43,0.2);color:#ec7063;border-color:var(--red);}
+.att-a.active{background:var(--red);color:#fff;}
+.att-l{background:rgba(230,126,34,0.2);color:#f39c12;border-color:var(--orange);}
+.att-l.active{background:var(--orange);color:#fff;}
+
+/* ===== STARS ===== */
+.star-rater{display:flex;gap:4px;margin:8px 0;}
+.star-rater button{
+  background:none;border:none;font-size:26px;cursor:pointer;
+  color:rgba(255,215,0,0.25);transition:color .1s,transform .1s;line-height:1;
+}
+.star-rater button.lit{color:var(--g);}
+.star-rater button:hover{transform:scale(1.15);}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar{height:7px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--g);border-radius:4px;transition:width .4s;}
+
+/* ===== AWARD CARDS ===== */
+.award-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.award-card{
+  background:var(--md);border:2px solid var(--g);border-radius:12px;
+  padding:20px;text-align:center;position:relative;overflow:hidden;
+}
+.award-card::before{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:80px;height:80px;background:rgba(255,215,0,0.06);
+  border-radius:50%;
+}
+.award-emoji{font-size:36px;margin-bottom:8px;}
+.award-name{font-size:15px;font-weight:700;color:var(--g);}
+.award-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+.award-month-label{
+  font-size:12px;font-weight:700;color:var(--g);
+  margin-bottom:10px;padding:4px 12px;
+  background:rgba(255,215,0,0.1);border-radius:20px;
+  display:inline-block;border:1px solid rgba(255,215,0,0.3);
+}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  padding:11px 22px;border-radius:8px;font-size:13px;font-weight:600;
+  opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.success{background:#27ae60;color:#fff;}
+#toast.error{background:#c0392b;color:#fff;}
+#toast.info{background:var(--md);color:var(--g);border:1.5px solid var(--g);}
+
+/* ===== FOOTER ===== */
+footer{
+  background:var(--mx);border-top:3px solid var(--g);
+  padding:10px 20px;text-align:center;
+}
+footer p{font-size:12px;color:var(--g);font-weight:600;letter-spacing:0.3px;}
+
+/* ===== LOGIN WRAPPER ===== */
+#loginWrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+.login-box{width:100%;max-width:380px;}
+.login-hero{text-align:center;margin-bottom:20px;}
+.login-hero .sym{font-size:48px;margin-bottom:8px;}
+.login-hero h2{font-size:22px;color:var(--g);font-weight:700;}
+.login-hero p{font-size:12px;color:var(--muted);margin-top:4px;}
+.login-card{
+  background:var(--ml);border:1.5px solid rgba(255,215,0,0.4);
+  border-radius:var(--radius);overflow:hidden;
+}
+.login-body{padding:20px;}
+
+/* ===== PARENT VIEW ===== */
+#parentWrap{flex:1;padding:20px;max-width:720px;margin:0 auto;width:100%;}
+.parent-header-card{
+  background:var(--md);border:2px solid var(--g);border-radius:12px;
+  padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;
+}
+.parent-avatar{
+  width:56px;height:56px;border-radius:50%;background:var(--g);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;color:var(--md);flex-shrink:0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .form-row,.form-row-3{grid-template-columns:1fr;}
+  .award-grid{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  #appHeader h1{font-size:16px;}
+  #appContent{padding:12px;}
+  #parentWrap{padding:12px;}
+}
+
+/* ===== DIVIDER ===== */
+.sep{border:none;border-top:1px solid rgba(255,215,0,0.15);margin:18px 0;}
+.section-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+
+/* ===== ACTIVITY ===== */
+.activity-item{
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;gap:10px;align-items:flex-start;
+}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:7px;height:7px;border-radius:50%;background:var(--g);margin-top:5px;flex-shrink:0;}
+.activity-time{font-size:11px;color:var(--muted);margin-top:1px;}
+
+/* ===== MONTH SELECTOR ===== */
+.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.month-nav button{
+  width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,215,0,0.3);
+  background:transparent;color:var(--g);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.month-nav button:hover{background:rgba(255,215,0,0.15);border-color:var(--g);}
+.month-nav span{font-size:14px;font-weight:600;color:var(--g);flex:1;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="appHeader">
+  <div class="logo">🕉</div>
+  <div>
+    <h1>जैन-पाठशाला</h1>
+    <p id="headerSub">श्री अरिहंत विकास समिति, भीलवाड़ा</p>
+  </div>
+  <button id="logoutBtn" onclick="logout()">⬅ Logout</button>
+</header>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <button onclick="gotoPage('dashboard')" data-page="dashboard">🏠 Dashboard</button>
+  <button onclick="gotoPage('attendance')" data-page="attendance">📋 Attendance</button>
+  <button onclick="gotoPage('students')" data-page="students">👨‍🎓 Students</button>
+  <button onclick="gotoPage('performance')" data-page="performance">⭐ Performance</button>
+  <button onclick="gotoPage('awards')" data-page="awards">🏆 Awards</button>
+  <button onclick="gotoPage('admin')" data-page="admin" id="adminNavBtn" style="display:none">🔧 Admin</button>
+</nav>
+
+<!-- LOGIN SCREEN -->
+<div id="loginWrap">
+  <div class="login-box">
+    <div class="login-hero">
+      <div class="sym">🕉</div>
+      <h2>जैन-पाठशाला</h2>
+      <p>श्री अरिहंत विकास समिति, भीलवाड़ा</p>
+    </div>
+    <div class="login-card">
+      <div class="login-tabs">
+        <div class="login-tab active" onclick="switchTab('admin')">🔧 Admin</div>
+        <div class="login-tab" onclick="switchTab('teacher')">👩‍🏫 शिक्षक</div>
+        <div class="login-tab" onclick="switchTab('parent')">👪 Parent</div>
+      </div>
+      <div class="login-body">
+
+        <!-- ADMIN -->
+        <div id="pane-admin" class="login-pane active">
+          <div class="section-label">Admin PIN</div>
+          <div class="pin-display" id="admin-dots">
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+          </div>
+          <div class="pin-pad" id="admin-pad"></div>
+          <div id="admin-err" style="min-height:20px;text-align:center;margin-top:10px;font-size:12px;color:#ec7063;"></div>
+        </div>
+
+        <!-- TEACHER -->
+        <div id="pane-teacher" class="login-pane">
+          <div class="form-group">
+            <label>अपना नाम चुनें</label>
+            <select id="teacherSelect"></select>
+          </div>
+          <div class="section-label" style="margin-top:14px;">PIN दर्ज करें</div>
+          <div class="pin-display" id="teacher-dots">
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+          </div>
+          <div class="pin-pad" id="teacher-pad"></div>
+          <div id="teacher-err" style="min-height:20px;text-align:center;margin-top:10px;font-size:12px;color:#ec7063;"></div>
+        </div>
+
+        <!-- PARENT -->
+        <div id="pane-parent" class="login-pane">
+          <div class="form-group">
+            <label>अपने बच्चे का नाम चुनें</label>
+            <select id="parentStudentSel"></select>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">कोई PIN आवश्यक नहीं — सीधे देखें।</p>
+          <button class="btn btn-primary btn-block" onclick="loginParent()">📖 Records देखें</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appWrap" style="display:none;flex:1;display:none;flex-direction:column;">
+  <div id="appContent">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🏆</span> इस महीने के सितारे</div>
+        <div class="award-grid" id="dashAwards"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📢</span> Recent Activity</div>
+        <div id="activityFeed"></div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="page-attendance" class="page">
+      <div class="card">
+        <div class="card-title"><span class="icon">📋</span> Attendance लें</div>
+        <div class="form-row" style="margin-bottom:14px;">
+          <div class="form-group" style="margin:0;">
+            <label>तारीख</label>
+            <input type="date" id="attDate">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Class Filter</label>
+            <select id="attClassFilter">
+              <option value="">सभी Classes</option>
+              <option>Bal</option><option>Madhyam</option><option>Uttam</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-outline" onclick="markAll('P')">✅ सभी Present</button>
+          <button class="btn btn-sm btn-outline" onclick="markAll('A')">❌ सभी Absent</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>नाम</th><th>Class</th><th>P / A / L</th></tr></thead>
+            <tbody id="attBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveAttendance()">💾 Save Attendance</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> Attendance Summary</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>नाम</th><th>Present</th><th>Absent</th><th>Late</th><th>%</th><th style="min-width:90px;">Progress</th></tr></thead>
+            <tbody id="attSummaryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div id="page-students" class="page">
+      <div class="card" id="addStudentCard">
+        <div class="card-title"><span class="icon">➕</span> नया छात्र/छात्रा जोड़ें</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title</label>
+            <select id="stu_title"><option>Mr.</option><option>Ms.</option></select>
+          </div>
+          <div class="form-group">
+            <label>पूरा नाम *</label>
+            <input type="text" id="stu_name" placeholder="जैसे Ananya Jain">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>संबंध</label>
+            <select id="stu_rel"><option>S/o</option><option>D/o</option></select>
+          </div>
+          <div class="form-group">
+            <label>अभिभावक का नाम *</label>
+            <input type="text" id="stu_parent" placeholder="पिता/माता का नाम">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>जन्म तिथि</label>
+            <input type="date" id="stu_dob">
+          </div>
+          <div class="form-group">
+            <label>Class</label>
+            <select id="stu_class"><option>Bal</option><option>Madhyam</option><option>Uttam</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>संपर्क नंबर</label>
+          <input type="tel" id="stu_contact" placeholder="अभिभावक का मोबाइल नंबर">
+        </div>
+        <button class="btn btn-primary" onclick="addStudent()">➕ छात्र जोड़ें</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">👨‍🎓</span> छात्र सूची
+          <span id="stuCount" class="badge badge-gold" style="margin-left:auto;font-size:12px;"></span>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <input type="text" id="stuSearch" placeholder="🔍 नाम से खोजें..." oninput="renderStudents()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>नाम</th><th>Class</th><th>अभिभावक</th><th>DOB</th><th id="stuActHdr">Actions</th></tr></thead>
+            <tbody id="studentBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div id="page-performance" class="page">
+      <div class="card" id="addPerfCard">
+        <div class="card-title"><span class="icon">⭐</span> Performance Rating दें</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>छात्र चुनें</label>
+            <select id="perfStudent"></select>
+          </div>
+          <div class="form-group">
+            <label>महीना</label>
+            <input type="month" id="perfMonth">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Rating (1 = सुधार चाहिए, 5 = उत्कृष्ट)</label>
+          <div class="star-rater" id="starRater">
+            <button onclick="setRating(1)" title="1 - Needs Improvement">★</button>
+            <button onclick="setRating(2)" title="2 - Below Average">★</button>
+            <button onclick="setRating(3)" title="3 - Average">★</button>
+            <button onclick="setRating(4)" title="4 - Good">★</button>
+            <button onclick="setRating(5)" title="5 - Excellent">★</button>
+          </div>
+          <div id="ratingLabel" style="font-size:12px;color:var(--muted);margin-top:4px;">कोई rating नहीं चुनी</div>
+        </div>
+        <div class="form-group">
+          <label>टिप्पणी (Optional)</label>
+          <input type="text" id="perfRemarks" placeholder="जैसे बहुत अच्छा प्रयास!">
+        </div>
+        <button class="btn btn-primary" onclick="savePerformance()">💾 Rating सहेजें</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">📈</span> Performance Records</div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <select id="perfFilter" onchange="renderPerfTable()">
+            <option value="">सभी महीने</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>नाम</th><th>महीना</th><th>Rating</th><th>टिप्पणी</th></tr></thead>
+            <tbody id="perfBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AWARDS -->
+    <div id="page-awards" class="page">
+      <div class="card">
+        <div class="card-title"><span class="icon">🏆</span> मासिक पुरस्कार</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+          हर महीने दो अलग-अलग छात्रों को स्वचालित रूप से चुना जाता है — एक सर्वश्रेष्ठ उपस्थिति के लिए और एक सर्वश्रेष्ठ प्रदर्शन के लिए। <strong style="color:var(--g);">एक ही महीने में एक छात्र दोनों पुरस्कार नहीं जीत सकता।</strong>
+        </p>
+        <div id="awardsContainer"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="page-admin" class="page">
+      <div class="card">
+        <div class="card-title"><span class="icon">➕</span> नए शिक्षक/शिक्षिका जोड़ें</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title</label>
+            <select id="tch_title"><option>Mr.</option><option>Ms.</option><option>Mrs.</option></select>
+          </div>
+          <div class="form-group">
+            <label>पूरा नाम *</label>
+            <input type="text" id="tch_name" placeholder="जैसे Priya Jain">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>संबंध</label>
+            <select id="tch_rel"><option>S/o</option><option>D/o</option><option>W/o</option></select>
+          </div>
+          <div class="form-group">
+            <label>अभिभावक / पति का नाम *</label>
+            <input type="text" id="tch_guardian" placeholder="नाम">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>PIN (4 अंक) *</label>
+            <input type="password" id="tch_pin" maxlength="4" placeholder="••••">
+          </div>
+          <div class="form-group">
+            <label>विषय / कक्षा</label>
+            <input type="text" id="tch_subject" placeholder="जैसे Agam Paath, Sthanak...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addTeacher()">➕ शिक्षक जोड़ें</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">👩‍🏫</span> शिक्षक/शिक्षिका सूची
+          <span id="tchCount" class="badge badge-gold" style="margin-left:auto;font-size:12px;"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>नाम</th><th>विषय</th><th>संबंध</th><th>Actions</th></tr></thead>
+            <tbody id="teacherBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">⚙️</span> Admin Settings</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Admin PIN बदलें</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>वर्तमान PIN</label>
+            <input type="password" id="oldPin" maxlength="4" placeholder="••••">
+          </div>
+          <div class="form-group">
+            <label>नया PIN</label>
+            <input type="password" id="newPin" maxlength="4" placeholder="••••">
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="changeAdminPin()">🔑 PIN बदलें</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PARENT APP -->
+<div id="parentWrap" style="display:none;">
+  <div id="parentHeaderCard" class="parent-header-card">
+    <div class="parent-avatar" id="parentAvatar"></div>
+    <div>
+      <div id="parentName" style="font-size:18px;font-weight:700;color:var(--g);"></div>
+      <div id="parentMeta" style="font-size:12px;color:var(--muted);margin-top:3px;"></div>
+      <span class="badge badge-gold" id="parentClass" style="margin-top:6px;display:inline-block;"></span>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="parentStats"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="parentSummaryGrid">
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span> Attendance</div>
+      <div id="parentAttDetail"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">⭐</span> Performance</div>
+      <div id="parentPerfDetail"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📅</span> हाल की उपस्थिति</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>तारीख</th><th>Status</th></tr></thead>
+        <tbody id="parentAttTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:4px;">
+    <button class="btn btn-outline" onclick="logout()">⬅ वापस जाएं</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FOOTER -->
+<footer>
+  <p>🕉 श्री अरिहंत विकास समिति, चन्द्र शेखर आजाद नगर, भीलवाड़ा, राजस्थान 🕉</p>
+</footer>
+
+<script>
+/* ============================
+   STATE
+============================ */
+let ADMIN_PIN = "1234";
+let currentRole = null;
+let currentUser = null;
+let currentRating = 0;
+let pinBuffer = { admin: "", teacher: "" };
+let savedAttendance = {}; // date -> studentId -> status (unsaved)
+
+const RATING_LABELS = ["","सुधार चाहिए","औसत से कम","औसत","अच्छा","उत्कृष्ट"];
+
+let DB = {
+  teachers: [
+    {id:1,title:"Mrs.",name:"Priya Jain",rel:"D/o",guardian:"Mohan Jain",pin:"1111",subject:"Agam Paath"},
+    {id:2,title:"Mr.",name:"Amit Sharma",rel:"S/o",guardian:"Vijay Sharma",pin:"2222",subject:"Sthanak Paath"}
+  ],
+  students: [
+    {id:1,title:"Ms.",name:"Ananya Jain",rel:"D/o",parent:"Rajesh Jain",dob:"2015-04-10",class_:"Bal",contact:"9876543210"},
+    {id:2,title:"Mr.",name:"Dev Kumar",rel:"S/o",parent:"Suresh Kumar",dob:"2014-07-22",class_:"Madhyam",contact:"9876543211"},
+    {id:3,title:"Ms.",name:"Priya Shah",rel:"D/o",parent:"Amit Shah",dob:"2013-11-05",class_:"Uttam",contact:"9876543212"},
+    {id:4,title:"Mr.",name:"Aryan Mehta",rel:"S/o",parent:"Nitin Mehta",dob:"2015-01-30",class_:"Bal",contact:"9876543213"},
+    {id:5,title:"Ms.",name:"Kavya Jain",rel:"D/o",parent:"Rajiv Jain",dob:"2014-09-18",class_:"Madhyam",contact:"9876543214"}
+  ],
+  attendance: [
+    // June sample data
+    {sid:1,date:"2025-06-01",status:"P"},{sid:2,date:"2025-06-01",status:"P"},
+    {sid:3,date:"2025-06-01",status:"A"},{sid:4,date:"2025-06-01",status:"P"},
+    {sid:5,date:"2025-06-01",status:"P"},
+    {sid:1,date:"2025-06-02",status:"P"},{sid:2,date:"2025-06-02",status:"L"},
+    {sid:3,date:"2025-06-02",status:"P"},{sid:4,date:"2025-06-02",status:"P"},
+    {sid:5,date:"2025-06-02",status:"A"},
+    {sid:1,date:"2025-06-03",status:"P"},{sid:2,date:"2025-06-03",status:"P"},
+    {sid:3,date:"2025-06-03",status:"P"},{sid:4,date:"2025-06-03",status:"A"},
+    {sid:5,date:"2025-06-03",status:"P"},
+    // May sample
+    {sid:1,date:"2025-05-01",status:"P"},{sid:2,date:"2025-05-01",status:"A"},
+    {sid:3,date:"2025-05-01",status:"P"},{sid:4,date:"2025-05-01",status:"P"},
+    {sid:5,date:"2025-05-01",status:"P"},
+    {sid:1,date:"2025-05-02",status:"P"},{sid:2,date:"2025-05-02",status:"P"},
+    {sid:3,date:"2025-05-02",status:"A"},{sid:4,date:"2025-05-02",status:"P"},
+    {sid:5,date:"2025-05-02",status:"P"},
+  ],
+  performance: [
+    {sid:1,month:"2025-06",rating:4,remarks:"बहुत अच्छा प्रयास"},
+    {sid:2,month:"2025-06",rating:5,remarks:"उत्कृष्ट प्रदर्शन"},
+    {sid:3,month:"2025-06",rating:3,remarks:"सुधार की जरूरत"},
+    {sid:4,month:"2025-06",rating:4,remarks:"अच्छा"},
+    {sid:5,month:"2025-06",rating:5,remarks:"शानदार"},
+    {sid:1,month:"2025-05",rating:5,remarks:"बेहतरीन"},
+    {sid:2,month:"2025-05",rating:3,remarks:"ठीक है"},
+    {sid:3,month:"2025-05",rating:4,remarks:"अच्छा प्रयास"},
+    {sid:4,month:"2025-05",rating:2,remarks:"और मेहनत चाहिए"},
+    {sid:5,month:"2025-05",rating:4,remarks:"अच्छा"},
+  ],
+  activity: [],
+  awardHistory: {} // month -> { attId, perfId }
+};
+
+/* ============================
+   UTILITY
+============================ */
+function toast(msg, type="info"){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "show "+type;
+  setTimeout(()=>{ t.className=""; }, 2800);
+}
+function log(msg){
+  DB.activity.unshift({ts: new Date().toLocaleTimeString('hi-IN'), msg});
+  if(DB.activity.length > 15) DB.activity.pop();
+}
+function fmtDate(d){ return d ? new Date(d+"T00:00:00").toLocaleDateString('hi-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+function getMonthLabel(m){ // "2025-06" -> "जून 2025"
+  if(!m) return '';
+  const [y,mo] = m.split('-');
+  const months = ['','जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+  return months[parseInt(mo)] + ' ' + y;
+}
+function stuName(s){ return s ? s.title+' '+s.name : '—'; }
+
+/* ============================
+   AWARDS (no-repeat logic)
+============================ */
+function computeAward(month) {
+  // Get all student ids
+  const allIds = DB.students.map(s=>s.id);
+
+  // --- Best Attendance ---
+  let attScores = allIds.map(id => {
+    const recs = DB.attendance.filter(a=>a.sid===id && a.date.startsWith(month));
+    const pct = recs.length ? recs.filter(a=>a.status==='P').length / recs.length : 0;
+    return { id, pct };
+  }).sort((a,b)=>b.pct - a.pct);
+
+  // --- Best Performance ---
+  let perfScores = allIds.map(id => {
+    const recs = DB.performance.filter(p=>p.sid===id && p.month===month);
+    const avg = recs.length ? recs.reduce((s,p)=>s+p.rating,0)/recs.length : 0;
+    return { id, avg };
+  }).sort((a,b)=>b.avg - a.avg);
+
+  let attWinner = null, perfWinner = null;
+
+  // Try to pick att winner first (highest attendance)
+  for(let c of attScores){
+    if(c.pct > 0){ attWinner = c.id; break; }
+  }
+
+  // Pick perf winner — must be DIFFERENT from att winner
+  for(let c of perfScores){
+    if(c.avg > 0 && c.id !== attWinner){ perfWinner = c.id; break; }
+  }
+
+  // Edge case: if only one student exists or all same, allow same
+  if(!perfWinner && perfScores.length){
+    perfWinner = perfScores[0].id;
+  }
+
+  return {
+    attId: attWinner,
+    perfId: perfWinner,
+    attStu: DB.students.find(s=>s.id===attWinner),
+    perfStu: DB.students.find(s=>s.id===perfWinner)
+  };
+}
+
+/* ============================
+   LOGIN
+============================ */
+function switchTab(tab){
+  document.querySelectorAll('.login-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['admin','teacher','parent'][i]===tab);
+  });
+  document.querySelectorAll('.login-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  pinBuffer.admin=""; pinBuffer.teacher="";
+  updateDots('admin-dots',''); updateDots('teacher-dots','');
+  if(tab==='parent') refreshParentSelect();
+}
+
+function buildPinPad(padId, dotsId, role){
+  const pad = document.getElementById(padId);
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  pad.innerHTML = keys.map(k=>`<button class="pin-key${k==='⌫'?' del':k==='✓'?' ok':''}" onclick="handlePin('${k}','${role}')">${k}</button>`).join('');
+}
+
+function handlePin(k, role){
+  let buf = pinBuffer[role];
+  if(k==='⌫'){ buf=buf.slice(0,-1); }
+  else if(k==='✓'){ verifyPin(role); return; }
+  else if(buf.length<4){ buf+=k; }
+  pinBuffer[role]=buf;
+  updateDots(role+'-dots', buf);
+  if(buf.length===4) setTimeout(()=>verifyPin(role), 120);
+}
+
+function updateDots(dotsId, val){
+  document.querySelectorAll('#'+dotsId+' .pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<val.length));
+}
+
+function verifyPin(role){
+  if(role==='admin'){
+    if(pinBuffer.admin===ADMIN_PIN){ loginSuccess('admin',null); }
+    else{ showErr('admin-err','❌ गलत PIN'); pinBuffer.admin=""; updateDots('admin-dots',''); }
+  } else {
+    const tid = parseInt(document.getElementById('teacherSelect').value);
+    const t = DB.teachers.find(x=>x.id===tid);
+    if(t && pinBuffer.teacher===t.pin){ loginSuccess('teacher',t); }
+    else{ showErr('teacher-err','❌ गलत PIN'); pinBuffer.teacher=""; updateDots('teacher-dots',''); }
+  }
+}
+
+function showErr(id, msg){
+  const el = document.getElementById(id);
+  el.textContent=msg; setTimeout(()=>el.textContent='',2500);
+}
+
+function loginParent(){
+  const sid = parseInt(document.getElementById('parentStudentSel').value);
+  if(!sid){ toast('कृपया छात्र चुनें','error'); return; }
+  const s = DB.students.find(x=>x.id===sid);
+  loginSuccess('parent', s);
+}
+
+function loginSuccess(role, user){
+  currentRole=role; currentUser=user;
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('logoutBtn').style.display='block';
+  if(role==='parent'){
+    document.getElementById('headerSub').textContent='Parent View — '+stuName(user);
+    document.getElementById('parentWrap').style.display='block';
+    renderParentView(user);
+  } else {
+    document.getElementById('headerSub').textContent = role==='admin'?'Admin Panel':'शिक्षक — '+(user?stuName(user):'');
+    document.getElementById('mainNav').style.display='flex';
+    document.getElementById('adminNavBtn').style.display = role==='admin'?'block':'none';
+    document.getElementById('appWrap').style.display='flex';
+    document.getElementById('appWrap').style.flexDirection='column';
+    refreshAll();
+    gotoPage('dashboard');
+  }
+  log((user?stuName(user):'Admin')+' logged in');
+}
+
+function logout(){
+  currentRole=null; currentUser=null; currentRating=0;
+  pinBuffer={admin:'',teacher:''};
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('mainNav').style.display='none';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('parentWrap').style.display='none';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('headerSub').textContent='श्री अरिहंत विकास समिति, भीलवाड़ा';
+  updateDots('admin-dots',''); updateDots('teacher-dots','');
+}
+
+/* ============================
+   NAVIGATION
+============================ */
+function gotoPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('#mainNav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  const renders = {
+    dashboard:renderDashboard, attendance:renderAttendance,
+    students:renderStudents, performance:renderPerformance,
+    awards:renderAwards, admin:renderAdmin
+  };
+  if(renders[id]) renders[id]();
+}
+
+/* ============================
+   DASHBOARD
+============================ */
+function renderDashboard(){
+  const now = new Date().toISOString().slice(0,7);
+  const monthRecs = DB.attendance.filter(a=>a.date.startsWith(now));
+  const pct = monthRecs.length ? Math.round(monthRecs.filter(a=>a.status==='P').length/monthRecs.length*100) : 0;
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${DB.students.length}</div><div class="stat-label">कुल छात्र</div></div>
+    <div class="stat-card"><div class="stat-num">${DB.teachers.length}</div><div class="stat-label">शिक्षक/शिक्षिका</div></div>
+    <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">इस माह उपस्थिति</div></div>
+    <div class="stat-card"><div class="stat-num">${DB.performance.filter(p=>p.month===now).length}</div><div class="stat-label">इस माह ratings</div></div>
+  `;
+  const aw = computeAward(now);
+  document.getElementById('dashAwards').innerHTML = `
+    <div class="award-card">
+      <div class="award-emoji">📅</div>
+      <div class="award-name">${aw.attStu ? stuName(aw.attStu) : '—'}</div>
+      <div class="award-sub">सर्वश्रेष्ठ उपस्थिति — ${getMonthLabel(now)}</div>
+    </div>
+    <div class="award-card">
+      <div class="award-emoji">⭐</div>
+      <div class="award-name">${aw.perfStu ? stuName(aw.perfStu) : '—'}</div>
+      <div class="award-sub">सर्वश्रेष्ठ प्रदर्शन — ${getMonthLabel(now)}</div>
+    </div>
+  `;
+  const feed = document.getElementById('activityFeed');
+  if(!DB.activity.length){ feed.innerHTML='<p style="color:var(--muted);font-size:13px;">कोई गतिविधि नहीं।</p>'; return; }
+  feed.innerHTML = DB.activity.map(a=>`
+    <div class="activity-item">
+      <div class="activity-dot"></div>
+      <div><div style="font-size:13px;">${a.msg}</div><div class="activity-time">${a.ts}</div></div>
+    </div>`).join('');
+}
+
+/* ============================
+   ATTENDANCE
+============================ */
+function renderAttendance(){
+  const dateEl = document.getElementById('attDate');
+  if(!dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  const date = dateEl.value;
+  const cls = document.getElementById('attClassFilter').value;
+  let studs = DB.students.filter(s=>!cls||s.class_===cls);
+  const body = document.getElementById('attBody');
+  body.innerHTML = studs.map((s,i)=>{
+    const saved = DB.attendance.find(a=>a.sid===s.id && a.date===date);
+    const live = (savedAttendance[date]||{})[s.id];
+    const st = live || (saved?saved.status:'');
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-weight:600">${stuName(s)}</td>
+      <td><span class="badge badge-gold">${s.class_}</span></td>
+      <td>
+        <div class="att-trio">
+          <button class="att-btn att-p ${st==='P'?'active':''}" onclick="markAtt(${s.id},'${date}','P')">P</button>
+          <button class="att-btn att-a ${st==='A'?'active':''}" onclick="markAtt(${s.id},'${date}','A')">A</button>
+          <button class="att-btn att-l ${st==='L'?'active':''}" onclick="markAtt(${s.id},'${date}','L')">L</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || `<tr class="empty-row"><td colspan="4">कोई छात्र नहीं।</td></tr>`;
+  renderAttSummary();
+}
+
+function markAtt(sid, date, status){
+  if(!savedAttendance[date]) savedAttendance[date]={};
+  savedAttendance[date][sid]=status;
+  renderAttendance();
+}
+
+function markAll(status){
+  const date = document.getElementById('attDate').value||new Date().toISOString().slice(0,10);
+  if(!savedAttendance[date]) savedAttendance[date]={};
+  DB.students.forEach(s=>{ savedAttendance[date][s.id]=status; });
+  renderAttendance();
+}
+
+function saveAttendance(){
+  const date = document.getElementById('attDate').value||new Date().toISOString().slice(0,10);
+  const liveDay = savedAttendance[date]||{};
+  let count=0;
+  Object.entries(liveDay).forEach(([sid,status])=>{
+    const s=parseInt(sid);
+    const idx=DB.attendance.findIndex(a=>a.sid===s&&a.date===date);
+    if(idx>=0) DB.attendance[idx].status=status; else DB.attendance.push({sid:s,date,status});
+    count++;
+  });
+  if(count===0){ toast('पहले attendance mark करें','error'); return; }
+  delete savedAttendance[date];
+  log('Attendance saved for '+date+' ('+count+' students)');
+  toast('✅ Attendance सहेजी गई!','success');
+  renderAttendance();
+}
+
+function renderAttSummary(){
+  const body = document.getElementById('attSummaryBody');
+  body.innerHTML = DB.students.map(s=>{
+    const recs=DB.attendance.filter(a=>a.sid===s.id);
+    const P=recs.filter(a=>a.status==='P').length;
+    const A=recs.filter(a=>a.status==='A').length;
+    const L=recs.filter(a=>a.status==='L').length;
+    const pct=recs.length?Math.round(P/recs.length*100):0;
+    return `<tr>
+      <td style="font-weight:600">${stuName(s)}</td>
+      <td style="color:#58d68d">${P}</td>
+      <td style="color:#ec7063">${A}</td>
+      <td style="color:#f39c12">${L}</td>
+      <td style="font-weight:600;color:var(--g)">${pct}%</td>
+      <td><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================
+   STUDENTS
+============================ */
+function renderStudents(){
+  const q=(document.getElementById('stuSearch')||{value:''}).value.toLowerCase();
+  let studs=DB.students.filter(s=>!q||s.name.toLowerCase().includes(q)||s.parent.toLowerCase().includes(q));
+  const canEdit=currentRole==='admin'||currentRole==='teacher';
+  document.getElementById('stuCount').textContent=DB.students.length+' छात्र';
+  document.getElementById('stuActHdr').style.display=canEdit?'':'none';
+  // update dropdowns
+  const perfSel=document.getElementById('perfStudent');
+  const parSel=document.getElementById('parentStudentSel');
+  if(perfSel){
+    const old=perfSel.value;
+    perfSel.innerHTML=DB.students.map(s=>`<option value="${s.id}">${stuName(s)}</option>`).join('');
+    if(old) perfSel.value=old;
+  }
+  if(parSel) parSel.innerHTML=DB.students.map(s=>`<option value="${s.id}">${stuName(s)} (${s.rel} ${s.parent})</option>`).join('');
+  document.getElementById('studentBody').innerHTML=studs.map(s=>`<tr>
+    <td style="font-weight:600">${stuName(s)}</td>
+    <td><span class="badge badge-gold">${s.class_}</span></td>
+    <td style="color:var(--muted)">${s.rel} ${s.parent}</td>
+    <td style="color:var(--muted)">${fmtDate(s.dob)}</td>
+    <td>${canEdit?`<button class="btn btn-danger" onclick="deleteStudent(${s.id})">🗑 हटाएं</button>`:''}</td>
+  </tr>`).join('')||`<tr class="empty-row"><td colspan="5">कोई छात्र नहीं।</td></tr>`;
+}
+
+function addStudent(){
+  const name=document.getElementById('stu_name').value.trim();
+  const parent=document.getElementById('stu_parent').value.trim();
+  if(!name||!parent){toast('नाम और अभिभावक का नाम जरूरी है','error');return;}
+  const s={id:Date.now(),title:document.getElementById('stu_title').value,name,rel:document.getElementById('stu_rel').value,parent,dob:document.getElementById('stu_dob').value,class_:document.getElementById('stu_class').value,contact:document.getElementById('stu_contact').value};
+  DB.students.push(s);
+  log('New student: '+stuName(s));
+  toast('✅ '+stuName(s)+' जोड़ा गया!','success');
+  ['stu_name','stu_parent','stu_dob','stu_contact'].forEach(id=>document.getElementById(id).value='');
+  renderStudents();
+}
+
+function deleteStudent(id){
+  const s=DB.students.find(x=>x.id===id);
+  if(!confirm(stuName(s)+' को हटाएं?')) return;
+  DB.students=DB.students.filter(x=>x.id!==id);
+  DB.attendance=DB.attendance.filter(a=>a.sid!==id);
+  DB.performance=DB.performance.filter(p=>p.sid!==id);
+  log('Removed student: '+stuName(s));
+  toast('🗑 '+s.name+' हटाया गया','info');
+  renderStudents(); renderDashboard();
+}
+
+/* ============================
+   PERFORMANCE
+============================ */
+function setRating(v){
+  currentRating=v;
+  document.querySelectorAll('#starRater button').forEach((b,i)=>b.classList.toggle('lit',i<v));
+  document.getElementById('ratingLabel').textContent = v+' star — '+RATING_LABELS[v];
+}
+
+function renderPerformance(){
+  renderStudents();
+  const pm=document.getElementById('perfMonth');
+  if(!pm.value) pm.value=new Date().toISOString().slice(0,7);
+  // fill filter
+  const months=[...new Set(DB.performance.map(p=>p.month))].sort().reverse();
+  const pf=document.getElementById('perfFilter');
+  pf.innerHTML='<option value="">सभी महीने</option>'+months.map(m=>`<option value="${m}">${getMonthLabel(m)}</option>`).join('');
+  renderPerfTable();
+}
+
+function renderPerfTable(){
+  const filter=document.getElementById('perfFilter').value;
+  let recs=DB.performance;
+  if(filter) recs=recs.filter(p=>p.month===filter);
+  document.getElementById('perfBody').innerHTML=recs.map(p=>{
+    const s=DB.students.find(x=>x.id===p.sid);
+    if(!s)return'';
+    const stars='★'.repeat(p.rating)+'☆'.repeat(5-p.rating);
+    return `<tr>
+      <td style="font-weight:600">${stuName(s)}</td>
+      <td><span class="badge badge-gold">${getMonthLabel(p.month)}</span></td>
+      <td style="color:var(--g)">${stars}</td>
+      <td style="color:var(--muted)">${p.remarks}</td>
+    </tr>`;
+  }).join('')||`<tr class="empty-row"><td colspan="4">कोई record नहीं।</td></tr>`;
+}
+
+function savePerformance(){
+  if(!currentRating){toast('कृपया rating चुनें','error');return;}
+  const sid=parseInt(document.getElementById('perfStudent').value);
+  const month=document.getElementById('perfMonth').value;
+  const remarks=document.getElementById('perfRemarks').value;
+  const idx=DB.performance.findIndex(p=>p.sid===sid&&p.month===month);
+  if(idx>=0) DB.performance[idx]={sid,month,rating:currentRating,remarks};
+  else DB.performance.push({sid,month,rating:currentRating,remarks});
+  const s=DB.students.find(x=>x.id===sid);
+  log('Rating: '+stuName(s)+' → '+currentRating+'★ ('+getMonthLabel(month)+')');
+  toast('✅ Rating सहेजी! '+currentRating+'★','success');
+  currentRating=0;
+  document.querySelectorAll('#starRater button').forEach(b=>b.classList.remove('lit'));
+  document.getElementById('ratingLabel').textContent='कोई rating नहीं चुनी';
+  document.getElementById('perfRemarks').value='';
+  renderPerfTable();
+}
+
+/* ============================
+   AWARDS PAGE
+============================ */
+function renderAwards(){
+  const allMonths=[...new Set([...DB.attendance.map(a=>a.date.slice(0,7)),...DB.performance.map(p=>p.month)])].sort().reverse();
+  const container=document.getElementById('awardsContainer');
+  if(!allMonths.length){container.innerHTML='<p style="color:var(--muted)">अभी कोई data नहीं।</p>';return;}
+  container.innerHTML=allMonths.map(m=>{
+    const aw=computeAward(m);
+    const sameWinner = aw.attId && aw.perfId && aw.attId===aw.perfId;
+    return `<div style="margin-bottom:20px;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <span class="award-month-label">${getMonthLabel(m)}</span>
+        ${sameWinner?'<span class="badge badge-orange" style="margin-left:8px;font-size:11px;">⚠ Same student — no data for second award</span>':''}
+      </div>
+      <div class="award-grid">
+        <div class="award-card">
+          <div class="award-emoji">📅</div>
+          <div class="award-name">${aw.attStu?stuName(aw.attStu):'Data उपलब्ध नहीं'}</div>
+          <div class="award-sub">सर्वश्रेष्ठ उपस्थिति</div>
+          ${aw.attStu?`<div style="font-size:11px;color:var(--muted);margin-top:4px;">${aw.attStu.class_} Class</div>`:''}
+        </div>
+        <div class="award-card">
+          <div class="award-emoji">⭐</div>
+          <div class="award-name">${aw.perfStu?stuName(aw.perfStu):'Data उपलब्ध नहीं'}</div>
+          <div class="award-sub">सर्वश्रेष्ठ प्रदर्शन</div>
+          ${aw.perfStu?`<div style="font-size:11px;color:var(--muted);margin-top:4px;">${aw.perfStu.class_} Class</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('<div class="sep"></div>');
+}
+
+/* ============================
+   ADMIN
+============================ */
+function renderAdmin(){
+  document.getElementById('tchCount').textContent=DB.teachers.length+' शिक्षक';
+  // refresh teacher dropdown
+  const sel=document.getElementById('teacherSelect');
+  const old=sel.value;
+  sel.innerHTML=DB.teachers.map(t=>`<option value="${t.id}">${stuName(t)}</option>`).join('');
+  if(old) sel.value=old;
+  document.getElementById('teacherBody').innerHTML=DB.teachers.map(t=>`<tr>
+    <td style="font-weight:600">${stuName(t)}</td>
+    <td><span class="badge badge-gold">${t.subject||'—'}</span></td>
+    <td style="color:var(--muted)">${t.rel} ${t.guardian}</td>
+    <td><button class="btn btn-danger" onclick="deleteTeacher(${t.id})">🗑 हटाएं</button></td>
+  </tr>`).join('')||`<tr class="empty-row"><td colspan="4">कोई शिक्षक नहीं।</td></tr>`;
+}
+
+function addTeacher(){
+  const name=document.getElementById('tch_name').value.trim();
+  const pin=document.getElementById('tch_pin').value;
+  const guardian=document.getElementById('tch_guardian').value.trim();
+  if(!name||!guardian){toast('नाम और अभिभावक का नाम जरूरी है','error');return;}
+  if(pin.length!==4||isNaN(pin)){toast('PIN 4 अंकों का होना चाहिए','error');return;}
+  if(DB.teachers.find(t=>t.pin===pin)){toast('यह PIN पहले से उपयोग में है','error');return;}
+  const t={id:Date.now(),title:document.getElementById('tch_title').value,name,rel:document.getElementById('tch_rel').value,guardian,pin,subject:document.getElementById('tch_subject').value};
+  DB.teachers.push(t);
+  log('Admin added teacher: '+stuName(t));
+  toast('✅ '+stuName(t)+' जोड़ा गया!','success');
+  ['tch_name','tch_guardian','tch_pin','tch_subject'].forEach(id=>document.getElementById(id).value='');
+  renderAdmin();
+}
+
+function deleteTeacher(id){
+  const t=DB.teachers.find(x=>x.id===id);
+  if(!confirm(stuName(t)+' को हटाएं?')) return;
+  DB.teachers=DB.teachers.filter(x=>x.id!==id);
+  log('Admin removed teacher: '+stuName(t));
+  toast('🗑 '+t.name+' हटाया गया','info');
+  renderAdmin();
+}
+
+function changeAdminPin(){
+  const old=document.getElementById('oldPin').value;
+  const nw=document.getElementById('newPin').value;
+  if(old!==ADMIN_PIN){toast('वर्तमान PIN गलत है','error');return;}
+  if(nw.length!==4||isNaN(nw)){toast('नया PIN 4 अंकों का होना चाहिए','error');return;}
+  ADMIN_PIN=nw;
+  document.getElementById('oldPin').value=''; document.getElementById('newPin').value='';
+  log('Admin PIN changed');
+  toast('✅ Admin PIN बदल गया!','success');
+}
+
+/* ============================
+   PARENT VIEW
+============================ */
+function refreshParentSelect(){
+  const sel=document.getElementById('parentStudentSel');
+  sel.innerHTML=DB.students.map(s=>`<option value="${s.id}">${stuName(s)} (${s.rel} ${s.parent})</option>`).join('');
+}
+
+function renderParentView(student){
+  const s=student;
+  document.getElementById('parentAvatar').textContent=s.name.charAt(0).toUpperCase();
+  document.getElementById('parentName').textContent=stuName(s);
+  document.getElementById('parentMeta').textContent=s.rel+' '+s.parent+(s.contact?' | '+s.contact:'');
+  document.getElementById('parentClass').textContent='Class: '+s.class_;
+
+  const recs=DB.attendance.filter(a=>a.sid===s.id);
+  const P=recs.filter(a=>a.status==='P').length;
+  const A=recs.filter(a=>a.status==='A').length;
+  const L=recs.filter(a=>a.status==='L').length;
+  const pct=recs.length?Math.round(P/recs.length*100):0;
+
+  const perfs=DB.performance.filter(p=>p.sid===s.id);
+  const avgR=perfs.length?Math.round(perfs.reduce((t,p)=>t+p.rating,0)/perfs.length*10)/10:0;
+
+  document.getElementById('parentStats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">उपस्थिति %</div></div>
+    <div class="stat-card"><div class="stat-num">${P}</div><div class="stat-label">Present दिन</div></div>
+    <div class="stat-card"><div class="stat-num">${avgR}</div><div class="stat-label">औसत rating (/5)</div></div>
+    <div class="stat-card"><div class="stat-num">${perfs.length}</div><div class="stat-label">Rated महीने</div></div>
+  `;
+
+  document.getElementById('parentAttDetail').innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:12px;">
+      <div style="text-align:center;flex:1"><div style="font-size:24px;font-weight:700;color:#58d68d">${P}</div><div style="font-size:11px;color:var(--muted)">Present</div></div>
+      <div style="text-align:center;flex:1"><div style="font-size:24px;font-weight:700;color:#ec7063">${A}</div><div style="font-size:11px;color:var(--muted)">Absent</div></div>
+      <div style="text-align:center;flex:1"><div style="font-size:24px;font-weight:700;color:#f39c12">${L}</div><div style="font-size:11px;color:var(--muted)">Late</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">${pct}% उपस्थिति</div>
+  `;
+
+  document.getElementById('parentPerfDetail').innerHTML=perfs.length
+    ? perfs.slice().reverse().map(p=>`
+        <div style="padding:7px 0;border-bottom:1px solid rgba(255,215,0,0.1);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="badge badge-gold" style="font-size:11px;">${getMonthLabel(p.month)}</span>
+            <span style="color:var(--g);font-size:15px;">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</span>
+          </div>
+          ${p.remarks?`<div style="font-size:11px;color:var(--muted);margin-top:3px;">${p.remarks}</div>`:''}
+        </div>`).join('')
+    : '<p style="color:var(--muted);font-size:13px;">अभी कोई rating नहीं।</p>';
+
+  document.getElementById('parentAttTable').innerHTML=recs.slice().reverse().slice(0,15).map(r=>`
+    <tr>
+      <td>${fmtDate(r.date)}</td>
+      <td>${r.status==='P'?'<span class="badge badge-green">✅ Present</span>':r.status==='A'?'<span class="badge badge-red">❌ Absent</span>':'<span class="badge badge-orange">⏰ Late</span>'}</td>
+    </tr>`).join('')||`<tr class="empty-row"><td colspan="2">कोई record नहीं।</td></tr>`;
+}
+
+/* ============================
+   INIT
+============================ */
+function refreshAll(){
+  renderStudents();
+  document.getElementById('perfMonth').value=new Date().toISOString().slice(0,7);
+  document.getElementById('attDate').value=new Date().toISOString().slice(0,10);
+}
+
+// Hide teacher-only elements for parent
+function applyRoleUI(){
+  const show = currentRole==='admin'||currentRole==='teacher';
+  const el = document.getElementById('addStudentCard');
+  if(el) el.style.display=show?'block':'none';
+  const el2 = document.getElementById('addPerfCard');
+  if(el2) el2.style.display=show?'block':'none';
+}
+
+// Build pin pads
+buildPinPad('admin-pad','admin-dots','admin');
+buildPinPad('teacher-pad','teacher-dots','teacher');
+
+// Init teacher dropdown
+function initTeacherSel(){
+  const sel=document.getElementById('teacherSelect');
+  sel.innerHTML=DB.teachers.map(t=>`<option value="${t.id}">${stuName(t)}</option>`).join('');
+}
+initTeacherSel();
+refreshParentSelect();
+
+// Date change
+document.getElementById('attDate').addEventListener('change',renderAttendance);
+document.getElementById('attClassFilter').addEventListener('change',renderAttendance);
+</script>
+</body>
+</html>
