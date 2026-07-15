@@ -487,7 +487,7 @@ async function showAdmin(){
   setMain('<div class="spinner"></div>');
   try{
     const [teachers,students,cfg]=await Promise.all([
-      dbGet('teachers?order=name'),
+      dbGet('teachers?select=id,salutation,name,relation_type,relation_name,phone,dob&order=name'),
       dbGet('students?order=name'),
       dbGet('admin_config?limit=1')
     ]);
