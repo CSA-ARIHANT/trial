@@ -456,19 +456,21 @@ function pkey(k,role){
 
 async function verifyPin(pin,role){
   try{
-    if(role==='admin'){
-      const data=await dbGet('admin_config?select=pin&limit=1');
-      if(data&&data.length&&data[0].pin===pin){
+if(role==='admin'){
+      const ok=await dbRpc('check_admin_pin',{input_pin:pin});
+      if(ok===true){
         saveMe({role:'admin'});document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('liveClock')?.classList.remove('hidden');showAdmin();
       } else pinErr();
     } else {
       const tid=document.getElementById('tSel')?.value;
       if(!tid){pinErr('पहले नाम चुनें।');return;}
-      const data=await dbGet('teachers?id=eq.'+tid+'&pin=eq.'+pin+'&limit=1');
-      if(data&&data.length){
+      const ok=await dbRpc('check_teacher_pin',{teacher_id:tid,input_pin:pin});
+      if(ok===true){
+        const data=await dbGet('teachers?id=eq.'+tid+'&select=id,salutation,name,relation_type,relation_name,phone,dob&limit=1');
         saveMe({role:'teacher',data:data[0]});document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('liveClock')?.classList.remove('hidden');showTeacher();
       } else pinErr();
     }
+  }
   }catch(e){pinErr('Error: '+e.message);}
 }
 function pinErr(msg){
