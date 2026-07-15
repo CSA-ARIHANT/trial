@@ -649,13 +649,16 @@ async function saveAC(){
 async function changePin(){
   const cur=g('cp'),nw=g('np'),re=g('rp'),el=document.getElementById('pinMsg');
   try{
-    const data=await dbGet('admin_config?select=pin&limit=1');
-    if(!data||data[0].pin!==cur){el.innerHTML='<div class="alert alert-err">वर्तमान PIN गलत।</div>';return;}
-    if(nw.length<4){el.innerHTML='<div class="alert alert-err">PIN 4 अंक का होना चाहिए।</div>';return;}
-    if(nw!==re){el.innerHTML='<div class="alert alert-err">PIN मेल नहीं खाता।</div>';return;}
-    await dbPatch('admin_config?id=eq.1',{pin:nw});
+    async function changePin(){
+  const cur=g('cp'),nw=g('np'),re=g('rp'),el=document.getElementById('pinMsg');
+  if(nw.length<4){el.innerHTML='<div class="alert alert-err">PIN 4 अंक का होना चाहिए।</div>';return;}
+  if(nw!==re){el.innerHTML='<div class="alert alert-err">PIN मेल नहीं खाता।</div>';return;}
+  try{
+    const ok=await dbRpc('change_admin_pin',{current_pin:cur,new_pin:nw});
+    if(!ok){el.innerHTML='<div class="alert alert-err">वर्तमान PIN गलत।</div>';return;}
     el.innerHTML='<div class="alert alert-ok">✅ PIN बदल गया!</div>';
   }catch(e){el.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>';}
+}
 }
 
 async function delTeacher(id,name){
