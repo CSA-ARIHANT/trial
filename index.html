@@ -1283,21 +1283,18 @@ function mTeacherChangePin(){
       <button class="btn btn-ghost" onclick="closeModal()">रद्द</button>
     </div>`);
 }
-
 async function doTeacherChangePin(){
   const cur=g('tcCur'),nw=g('tcNew'),re=g('tcRe');
-  if(cur!==ME.data.pin){merr('tcErr','वर्तमान PIN गलत है।');return;}
   if(nw.length!==4){merr('tcErr','नया PIN 4 अंक का होना चाहिए।');return;}
   if(nw!==re){merr('tcErr','नया PIN मेल नहीं खाता।');return;}
   try{
+    const ok=await dbRpc('check_teacher_pin',{teacher_id:ME.data.id,input_pin:cur});
+    if(!ok){merr('tcErr','वर्तमान PIN गलत है।');return;}
     await dbPatch('teachers?id=eq.'+ME.data.id,{pin:nw});
-    ME.data.pin=nw;
-    saveMe(ME);
     closeModal();
     toast('✅ आपका PIN बदल गया!');
   }catch(e){merr('tcErr','Error: '+e.message);}
 }
-
 // ── PARENT ───────────────────────────────────
 function showParentSearch(){
   document.getElementById('liveClock')?.classList.remove('hidden');
