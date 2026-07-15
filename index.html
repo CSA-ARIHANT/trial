@@ -146,6 +146,7 @@ select option{background:#fff;}
 <footer class="app-footer">🙏 श्री अरिहंत विकास समिति, चन्द्र शेखर आजाद नगर, भीलवाड़ा, राजस्थान 🙏</footer>
 <div class="modal-bg hidden" id="modalBg"><div class="modal" id="modalBox"></div></div>
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL='https://txmifqaywbaszfugkmhy.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4bWlmcWF5d2Jhc3pmdWdrbWh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjY3NTQsImV4cCI6MjA5Nzk0Mjc1NH0.T3zBZDvAK01QLBO63h89QCE-nOYSE_atsP_8Zay5H6E';
@@ -527,15 +528,22 @@ async function showAdmin(){
       </div>
 
       <div id="ap-s" class="hidden">
-        <div class="alert alert-info mb-3">सभी शिक्षकों को ये विद्यार्थी दिखते हैं — साझा कक्षा।</div>
+        <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+          <div class="alert alert-info" style="margin:0;flex:1;">सभी शिक्षकों को ये विद्यार्थी दिखते हैं — साझा कक्षा।</div>
+          <button class="btn btn-green btn-sm" onclick="downloadExcel()">📥 Excel Download</button>
+          <button class="btn btn-sky btn-sm" onclick="document.getElementById('xlUpload').click()">📤 Excel Upload</button>
+          <input type="file" id="xlUpload" accept=".xlsx,.xls,.csv" class="hidden" onchange="uploadExcel(this)">
+        </div>
         ${!sc?'<div class="empty"><div>👦</div><p>कोई विद्यार्थी नहीं।</p></div>':`
         <div class="table-wrap"><table>
-          <thead><tr><th>नाम</th><th>संबंध</th><th>मोबाइल</th><th>कक्षा</th></tr></thead>
+          <thead><tr><th>नाम</th><th>संबंध</th><th>📱 मोबाइल</th><th>🎂 जन्म तिथि</th><th>कक्षा</th><th>पता</th></tr></thead>
           <tbody>${students.map(s=>`<tr>
             <td><b>${s.salutation} ${s.name}</b></td>
             <td>${s.relation_type||''} ${s.relation_name||''}</td>
             <td>${s.phone||'-'}</td>
+            <td>${fmtDate(s.dob)}</td>
             <td>${s.class||'-'}</td>
+            <td>${s.address||'-'}</td>
           </tr>`).join('')}</tbody>
         </table></div>`}
       </div>
@@ -1372,7 +1380,184 @@ async function showParentView(sid){
   }catch(e){setMain('<div class="alert alert-err">Error: '+e.message+'</div>');}
 }
 
-// ── HELPERS ──────────────────────────────────
+// ══════════════════════════════════════════════
+// EXCEL DOWNLOAD — सम्पूर्ण डेटा
+// ══════════════════════════════════════════════
+async function downloadExcel(){
+  toast('📥 Excel तैयार हो रहा है...',4000);
+  try{
+    // Fetch all data
+    const [teachers,students,classDates,attendance,performance,awards,cfg]=await Promise.all([
+      dbGet('teachers?order=name'),
+      dbGet('students?order=name'),
+      dbGet('class_dates?order=class_date'),
+      dbGet('attendance?order=date'),
+      dbGet('performance?order=month_year'),
+      dbGet('monthly_awards?order=month_year'),
+      dbGet('admin_config?limit=1')
+    ]);
+
+    const wb=XLSX.utils.book_new();
+
+    // Sheet 1 — शिक्षक
+    const tRows=(teachers||[]).map(t=>({
+      'पद':t.salutation||'',
+      'नाम':t.name||'',
+      'संबंध प्रकार':t.relation_type||'',
+      'संबंधी नाम':t.relation_name||'',
+      'मोबाइल':t.phone||'',
+      'जन्म तिथि':fmtDate(t.dob),
+      'ID':t.id
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(tRows.length?tRows:[{}]),'शिक्षक');
+
+    // Sheet 2 — विद्यार्थी
+    const sRows=(students||[]).map(s=>({
+      'पद':s.salutation||'',
+      'नाम':s.name||'',
+      'संबंध प्रकार':s.relation_type||'',
+      'संबंधी नाम':s.relation_name||'',
+      'जन्म तिथि':fmtDate(s.dob),
+      'कक्षा':s.class||'',
+      'मोबाइल':s.phone||'',
+      'पता':s.address||'',
+      'ID':s.id
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sRows.length?sRows:[{}]),'विद्यार्थी');
+
+    // Sheet 3 — कक्षा तिथियाँ
+    const cdRows=(classDates||[]).map(d=>({
+      'कक्षा तिथि':fmtDate(d.class_date),
+      'माह':d.month_year||'',
+      'ID':d.id
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cdRows.length?cdRows:[{}]),'कक्षा तिथियाँ');
+
+    // Sheet 4 — उपस्थिति (join with names)
+    const stuMap={};(students||[]).forEach(s=>stuMap[s.id]=s.salutation+' '+s.name);
+    const cdMap={};(classDates||[]).forEach(d=>cdMap[d.id]=d.class_date);
+    const attRows=(attendance||[]).map(a=>({
+      'विद्यार्थी':stuMap[a.student_id]||a.student_id,
+      'तिथि':fmtDate(a.date),
+      'माह':a.month_year||'',
+      'उपस्थिति':a.status==='present'?'उपस्थित':'अनुपस्थित',
+      'Lock':a.locked?'हाँ':'नहीं'
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(attRows.length?attRows:[{}]),'उपस्थिति');
+
+    // Sheet 5 — प्रदर्शन रेटिंग
+    const perfRows=(performance||[]).map(p=>({
+      'विद्यार्थी':stuMap[p.student_id]||p.student_id,
+      'कक्षा तिथि':fmtDate(cdMap[p.class_date_id]),
+      'माह':p.month_year||'',
+      'रेटिंग':p.rating||'',
+      'Lock':p.locked?'हाँ':'नहीं'
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(perfRows.length?perfRows:[{}]),'प्रदर्शन रेटिंग');
+
+    // Sheet 6 — मासिक पुरस्कार
+    const awRows=(awards||[]).map(a=>({
+      'माह':a.month_year||'',
+      'श्रेणी':a.award_type==='attendance'?'सर्वश्रेष्ठ उपस्थिति':'सर्वश्रेष्ठ प्रदर्शन',
+      'विद्यार्थी':stuMap[a.student_id]||a.student_id
+    }));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(awRows.length?awRows:[{}]),'मासिक पुरस्कार');
+
+    // Download
+    const today=new Date();
+    const fname=`जैन_पाठशाला_${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}.xlsx`;
+    XLSX.writeFile(wb,fname);
+    toast('✅ Excel डाउनलोड हो गई!');
+  }catch(e){
+    toast('❌ Error: '+e.message);
+    console.error('Excel download error:',e);
+  }
+}
+
+// ══════════════════════════════════════════════
+// EXCEL UPLOAD — विद्यार्थी / शिक्षक bulk add
+// ══════════════════════════════════════════════
+async function uploadExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      let imported=0,errors=[];
+
+      // Import विद्यार्थी sheet if exists
+      if(wb.SheetNames.includes('विद्यार्थी')||wb.SheetNames.includes('Students')){
+        const sheetName=wb.SheetNames.includes('विद्यार्थी')?'विद्यार्थी':'Students';
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+        for(const r of rows){
+          const name=r['नाम']||r['Name']||'';
+          if(!name)continue;
+          try{
+            await dbPost('students',{
+              salutation:r['पद']||r['Salutation']||'Mr',
+              name:name.trim(),
+              relation_type:r['संबंध प्रकार']||r['Relation Type']||null,
+              relation_name:r['संबंधी नाम']||r['Relation Name']||null,
+              dob:parseExcelDate(r['जन्म तिथि']||r['DOB']||''),
+              class:r['कक्षा']||r['Class']||null,
+              phone:String(r['मोबाइल']||r['Mobile']||'').replace(/\D/g,'')||null,
+              address:r['पता']||r['Address']||null
+            });
+            imported++;
+          }catch(err){errors.push('विद्यार्थी: '+name+' — '+err.message);}
+        }
+      }
+
+      // Import शिक्षक sheet if exists
+      if(wb.SheetNames.includes('शिक्षक')||wb.SheetNames.includes('Teachers')){
+        const sheetName=wb.SheetNames.includes('शिक्षक')?'शिक्षक':'Teachers';
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+        for(const r of rows){
+          const name=r['नाम']||r['Name']||'';
+          const pin=String(r['PIN']||'');
+          if(!name||!pin||pin.length!==4)continue;
+          try{
+            await dbPost('teachers',{
+              salutation:r['पद']||r['Salutation']||'Mr',
+              name:name.trim(),
+              relation_type:r['संबंध प्रकार']||r['Relation Type']||null,
+              relation_name:r['संबंधी नाम']||r['Relation Name']||null,
+              phone:String(r['मोबाइल']||r['Mobile']||'').replace(/\D/g,'')||null,
+              dob:parseExcelDate(r['जन्म तिथि']||r['DOB']||''),
+              pin:pin
+            });
+            imported++;
+          }catch(err){errors.push('शिक्षक: '+name+' — '+err.message);}
+        }
+      }
+
+      input.value='';
+      let msg=`✅ ${imported} records import हुए।`;
+      if(errors.length)msg+=`\n⚠️ ${errors.length} errors:\n`+errors.slice(0,5).join('\n');
+      alert(msg);
+      showAdmin();
+    }catch(e){
+      alert('❌ File read error: '+e.message);
+      input.value='';
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function parseExcelDate(val){
+  if(!val)return null;
+  const s=String(val).trim();
+  if(!s||s==='-')return null;
+  // dd-mm-yyyy or dd/mm/yyyy
+  const m=s.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
+  if(m)return `${m[3]}-${m[2]}-${m[1]}`;
+  // yyyy-mm-dd already
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  return null;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+
 function setMain(h){document.getElementById('appMain').innerHTML=h;}
 function g(id){return document.getElementById(id)?.value?.trim()||'';}
 function today(){return new Date().toISOString().split('T')[0];}
