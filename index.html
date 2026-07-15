@@ -175,7 +175,7 @@ const dbPost=(p,b)=>db(p,'POST',b);
 const dbPatch=(p,b)=>db(p,'PATCH',b);
 const dbDelete=p=>db(p,'DELETE');
 const dbUpsert=(p,b)=>db(p,'POST',b,{'Prefer':'resolution=merge-duplicates,return=representation'});
-
+const dbRpc=(fn,body)=>db('rpc/'+fn,'POST',body);
 window.addEventListener('load',()=>{
   const s=sessionStorage.getItem('jpMe');
   if(s)try{ME=JSON.parse(s);}catch(e){}
