@@ -920,11 +920,13 @@ async function showTeacher(){
   try{
     const cls = ME.data.assigned_class;
 
-const students = await dbGet(
-  'students?class=eq.' +
-  encodeURIComponent(cls) +
-  '&order=name'
-);
+const students = cls
+  ? await dbGet(
+      'students?class=eq.' +
+      encodeURIComponent(cls) +
+      '&order=name'
+    )
+  : await dbGet('students?order=name');
 
 window._stus = students || [];
     const t=ME.data;
