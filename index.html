@@ -137,7 +137,6 @@ select option{background:#fff;}
 <header class="app-header">
   <div class="logo">ॐ</div>
   <div class="title-group"><h1>जैन पाठशाला</h1><p>श्री अरिहंत विकास समिति</p></div>
-  <div id="liveClock" class="hidden" style="margin-left:16px;font-size:12px;color:#bae6fd;white-space:nowrap;"></div>
   <div class="header-right">
     <button class="btn-logout hidden" id="logoutBtn" onclick="logout()">लॉगआउट</button>
   </div>
@@ -179,229 +178,28 @@ window.addEventListener('load',()=>{
   const s=sessionStorage.getItem('jpMe');
   if(s)try{ME=JSON.parse(s);}catch(e){}
   ME?routeMe():showLanding();
-  startClock();
 });
-
-function startClock(){
-  function tick(){
-    const el=document.getElementById('liveClock');
-    if(!el)return;
-    const d=new Date();
-    const dd=String(d.getDate()).padStart(2,'0');
-    const mm=String(d.getMonth()+1).padStart(2,'0');
-    const yyyy=d.getFullYear();
-    let h=d.getHours();const ampm=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;
-    const mi=String(d.getMinutes()).padStart(2,'0');
-    const se=String(d.getSeconds()).padStart(2,'0');
-    el.textContent='📅 '+dd+'-'+mm+'-'+yyyy+'  🕐 '+h+':'+mi+':'+se+' '+ampm;
-  }
-  tick();
-  setInterval(tick,1000);
-}
 
 function routeMe(){
   document.getElementById('logoutBtn').classList.remove('hidden');
-  document.getElementById('liveClock')?.classList.remove('hidden');
   ME.role==='admin'?showAdmin():ME.role==='teacher'?showTeacher():showParentSearch();
 }
-function logout(){
-  ME=null;sessionStorage.removeItem('jpMe');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('liveClock')?.classList.add('hidden');
-  showLanding();
-}
+function logout(){ME=null;sessionStorage.removeItem('jpMe');document.getElementById('logoutBtn').classList.add('hidden');showLanding();}
 function saveMe(o){ME=o;sessionStorage.setItem('jpMe',JSON.stringify(o));}
 
 // ── LANDING ──────────────────────────────────
-async function showLanding(){
-  document.getElementById('liveClock')?.classList.add('hidden');
+function showLanding(){
   setMain(`
-    <div class="text-center" style="margin-bottom:20px;">
+    <div class="text-center" style="margin-bottom:28px;">
       <div style="font-size:56px;margin-bottom:12px;">🙏</div>
       <h1 style="font-size:30px;font-weight:800;color:var(--sky-deeper);margin-bottom:8px;">जैन पाठशाला</h1>
       <p style="color:#64748b;">श्री अरिहंत विकास समिति — भीलवाड़ा</p>
     </div>
-
-    <div id="dailyQuoteDiv" class="mb-3"></div>
-    <div id="panchangDiv" class="mb-3"></div>
-    <div id="birthdayDiv"></div>
-    <div id="winnersDiv" class="mb-3"></div>
-
-    <div class="login-cards mb-3">
+    <div class="login-cards">
       <div class="lcard" onclick="showAdminLogin()"><div class="ic">👑</div><h3>Admin</h3><p>सम्पूर्ण प्रबंधन</p></div>
       <div class="lcard" onclick="showTeacherLogin()"><div class="ic">📚</div><h3>शिक्षक / शिक्षिका</h3><p>उपस्थिति एवं प्रदर्शन</p></div>
       <div class="lcard" onclick="showParentSearch()"><div class="ic">👨‍👩‍👧</div><h3>अभिभावक</h3><p>बच्चे की जानकारी</p></div>
-    </div>
-
-    <div id="visitorDiv" class="text-center"></div>
-  `);
-  loadDailyQuote();
-  loadPanchang();
-  loadBirthdays();
-  loadLandingWinners();
-  bumpVisitorCount();
-}
-
-// ── 1. VISITOR COUNTER ────────────────────────
-async function bumpVisitorCount(){
-  const el=document.getElementById('visitorDiv');
-  try{
-    // Try fetch existing counter row
-    let rows=await dbGet('visitor_count?id=eq.1&select=count');
-    let newCount;
-    if(rows&&rows.length){
-      newCount=(rows[0].count||0)+1;
-      await dbPatch('visitor_count?id=eq.1',{count:newCount});
-    } else {
-      newCount=1;
-      await dbPost('visitor_count',{id:1,count:1});
-    }
-    if(el)el.innerHTML='<p style="font-size:12px;color:#64748b;margin-top:10px;">👁️ कुल विज़िटर: <b style="color:var(--sky-deeper);">'+newCount+'</b></p>';
-  }catch(e){
-    if(el)el.innerHTML='';
-    console.warn('Visitor counter table missing — run updated SQL to enable.');
-  }
-}
-
-// ── 2. MONTHLY WINNERS DISPLAY ────────────────
-async function loadLandingWinners(){
-  const el=document.getElementById('winnersDiv');
-  if(!el)return;
-  try{
-    const d=new Date();
-    const my=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const prevD=new Date(d.getFullYear(),d.getMonth()-1,1);
-    const prevMy=`${prevD.getFullYear()}-${String(prevD.getMonth()+1).padStart(2,'0')}`;
-
-    let data=await dbGet('monthly_awards?month_year=eq.'+my+'&select=award_type,students(name,salutation)');
-    let usedMy=my;
-    if(!data||!data.length){
-      data=await dbGet('monthly_awards?month_year=eq.'+prevMy+'&select=award_type,students(name,salutation)');
-      usedMy=prevMy;
-    }
-    if(!data||!data.length){el.innerHTML='';return;}
-    const att=data.filter(x=>x.award_type==='attendance');
-    const perf=data.filter(x=>x.award_type==='performance');
-    el.innerHTML=`
-      <div class="card" style="max-width:680px;margin:0 auto;">
-        <div class="card-title" style="justify-content:center;">🏆 मासिक विजेता — ${monthLabel(usedMy)}</div>
-        <div class="form-row">
-          <div class="award-card"><div class="tr">🏅</div><h4>सर्वश्रेष्ठ उपस्थिति</h4>
-            ${att.length?att.map(x=>`<p style="color:var(--gold-light);font-weight:700;margin-top:6px;">${x.students?.salutation||''} ${x.students?.name||''}</p>`).join(''):'<p style="color:#bae6fd;font-size:12px;">अभी घोषित नहीं</p>'}
-          </div>
-          <div class="award-card"><div class="tr">⭐</div><h4>सर्वश्रेष्ठ प्रदर्शन</h4>
-            ${perf.length?perf.map(x=>`<p style="color:var(--gold-light);font-weight:700;margin-top:6px;">${x.students?.salutation||''} ${x.students?.name||''}</p>`).join(''):'<p style="color:#bae6fd;font-size:12px;">अभी घोषित नहीं</p>'}
-          </div>
-        </div>
-      </div>`;
-  }catch(e){el.innerHTML='';}
-}
-function monthLabel(my){
-  if(!my)return '';
-  const [y,m]=my.split('-');
-  const dt=new Date(parseInt(y),parseInt(m)-1,1);
-  return dt.toLocaleDateString('hi-IN',{year:'numeric',month:'long'});
-}
-
-// ── 3. BIRTHDAY NOTIFICATION ──────────────────
-async function loadBirthdays(){
-  const el=document.getElementById('birthdayDiv');
-  if(!el)return;
-  try{
-    const today=new Date();
-    const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
-    const tMM=String(today.getMonth()+1).padStart(2,'0'),tDD=String(today.getDate()).padStart(2,'0');
-    const mMM=String(tomorrow.getMonth()+1).padStart(2,'0'),mDD=String(tomorrow.getDate()).padStart(2,'0');
-
-    const students=await dbGet('students?select=name,salutation,dob');
-    let teachers=[];
-    try{ teachers=await dbGet('teachers?select=name,salutation,dob'); }catch(e){ teachers=[]; }
-
-    let html='';
-    const checkPerson=(p,label)=>{
-      if(!p.dob)return;
-      const d=new Date(p.dob+'T00:00:00');
-      const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
-      if(mm===tMM&&dd===tDD){
-        html+=`<div class="confirm-box" style="background:#fdf4ff;border-color:#e9d5ff;margin-bottom:10px;">
-          <div class="ci">🎂🎉</div>
-          <p style="color:#86198f;"><b>जन्मदिन मुबारक हो!</b><br>${label} ${p.salutation} ${p.name} 🎈</p>
-        </div>`;
-      } else if(mm===mMM&&dd===mDD){
-        html+=`<div class="alert alert-info mb-3" style="text-align:center;">
-          🎂 कल ${label} <b>${p.salutation} ${p.name}</b> का जन्मदिन है!
-        </div>`;
-      }
-    };
-
-    (students||[]).forEach(s=>checkPerson(s,'विद्यार्थी'));
-    (teachers||[]).forEach(t=>checkPerson(t,'शिक्षक/शिक्षिका'));
-
-    el.innerHTML=html;
-
-  }catch(e){el.innerHTML='';}
-}
-
-// ── 4. DAILY QUOTE ─────────────────────────────
-const HINDI_QUOTES=[
-  'ज्ञान से सेवा की ओर, सेवा से मुक्ति की ओर।',
-  'अहिंसा परमो धर्मः — जैन धर्म का मूल मंत्र।',
-  'क्षमा वीरस्य भूषणम् — क्षमा वीरों का आभूषण है।',
-  'जियो और जीने दो — यही सच्चा जैन धर्म है।',
-  'संयम से ही आत्मा की शुद्धि होती है।',
-  'सत्य ही सबसे बड़ा तप है।',
-  'जो स्वयं को जीतता है, वही सच्चा विजेता है।',
-  'त्याग में ही वास्तविक सुख छिपा है।',
-  'प्रत्येक जीव में परमात्मा का वास है — सबका सम्मान करें।',
-  'अपरिग्रह से मन को शांति मिलती है।',
-  'विद्या वही है जो विनय दे।',
-  'सच्ची सेवा वही है जो निःस्वार्थ हो।',
-  'धैर्य और संयम सफलता की कुंजी हैं।',
-  'जैसा बोओगे, वैसा काटोगे — कर्मों का फल अवश्य मिलता है।',
-  'मन की शुद्धता ही सच्ची पूजा है।'
-];
-function loadDailyQuote(){
-  const el=document.getElementById('dailyQuoteDiv');
-  if(!el)return;
-  const dayIdx=Math.floor(Date.now()/86400000)%HINDI_QUOTES.length;
-  const quote=HINDI_QUOTES[dayIdx];
-  el.innerHTML=`<div class="card text-center" style="max-width:600px;margin:0 auto;background:linear-gradient(135deg,#fef9c3,#fef3c7);border-color:#fcd34d;">
-    <p style="font-size:14px;color:#92400e;font-style:italic;">📿 "${quote}"</p>
-  </div>`;
-}
-
-// ── 5. JAIN PANCHANG (basic tithi/date info) ──
-async function loadPanchang(){
-  const el=document.getElementById('panchangDiv');
-  if(!el)return;
-  const today=new Date();
-  const dd=String(today.getDate()).padStart(2,'0');
-  const mm=String(today.getMonth()+1).padStart(2,'0');
-  const yyyy=today.getFullYear();
-  const weekday=today.toLocaleDateString('hi-IN',{weekday:'long'});
-
-  const festivals={
-    '03-22':'महावीर जयंती 🙏',
-  };
-  const key=mm+'-'+dd;
-  const festival=festivals[key]||null;
-
-  let nextClassHtml='';
-  try{
-    const todayIso=today.toISOString().split('T')[0];
-    const upcoming=await dbGet('class_dates?class_date=gte.'+todayIso+'&order=class_date&limit=1');
-    if(upcoming&&upcoming.length){
-      nextClassHtml=`<br>📚 अगली कक्षा: <b>${fmtDate(upcoming[0].class_date)}</b>`;
-    }
-  }catch(e){}
-
-  el.innerHTML=`<div class="card text-center" style="max-width:600px;margin:0 auto;background:linear-gradient(135deg,#e0f2fe,#bae6fd);border-color:#7dd3fc;">
-    <p style="font-size:13px;color:var(--sky-deeper);">
-      📆 आज: <b>${dd}-${mm}-${yyyy}</b> (${weekday})
-      ${festival?`<br>🪔 <b>${festival}</b>`:''}
-      ${nextClassHtml}
-    </p>
-  </div>`;
+    </div>`);
 }
 
 // ── PIN SCREEN ───────────────────────────────
@@ -458,14 +256,14 @@ async function verifyPin(pin,role){
     if(role==='admin'){
       const data=await dbGet('admin_config?select=pin&limit=1');
       if(data&&data.length&&data[0].pin===pin){
-        saveMe({role:'admin'});document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('liveClock')?.classList.remove('hidden');showAdmin();
+        saveMe({role:'admin'});document.getElementById('logoutBtn').classList.remove('hidden');showAdmin();
       } else pinErr();
     } else {
       const tid=document.getElementById('tSel')?.value;
       if(!tid){pinErr('पहले नाम चुनें।');return;}
       const data=await dbGet('teachers?id=eq.'+tid+'&pin=eq.'+pin+'&limit=1');
       if(data&&data.length){
-        saveMe({role:'teacher',data:data[0]});document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('liveClock')?.classList.remove('hidden');showTeacher();
+        saveMe({role:'teacher',data:data[0]});document.getElementById('logoutBtn').classList.remove('hidden');showTeacher();
       } else pinErr();
     }
   }catch(e){pinErr('Error: '+e.message);}
@@ -512,12 +310,11 @@ async function showAdmin(){
         </div>
         ${!tc?'<div class="empty"><div>📚</div><p>कोई शिक्षक नहीं।</p></div>':`
         <div class="table-wrap"><table>
-          <thead><tr><th>नाम</th><th>संबंध</th><th>📱 मोबाइल</th><th>🎂 जन्म तिथि</th><th>कार्य</th></tr></thead>
+          <thead><tr><th>नाम</th><th>संबंध</th><th>मोबाइल</th><th>कार्य</th></tr></thead>
           <tbody>${teachers.map(t=>`<tr>
             <td><b>${t.salutation} ${t.name}</b></td>
             <td>${t.relation_type||''} ${t.relation_name||''}</td>
             <td>${t.phone||'-'}</td>
-            <td>${fmtDate(t.dob)}</td>
             <td><div class="flex gap-2">
               <button class="btn btn-sky btn-sm" onclick='mEditTeacher(${JSON.stringify(t)})'>✏️</button>
               <button class="btn btn-red btn-sm" onclick="delTeacher('${t.id}','${t.name}')">🗑️</button>
@@ -561,20 +358,8 @@ async function showAdmin(){
       </div>
 
       <div id="ap-rs" class="hidden">
-        <div class="card mb-3">
-          <div class="card-title">🔐 शिक्षक PIN Reset</div>
-          <p style="font-size:13px;color:#64748b;margin-bottom:14px;">किसी शिक्षक का PIN भूल जाने पर यहाँ से नया PIN सेट करें।</p>
-          <div class="form-row">
-            <div class="form-group"><label>शिक्षक चुनें</label>
-              <select id="trPinSel"><option value="">-- चुनें --</option></select>
-            </div>
-            <div class="form-group"><label>नया PIN (4 अंक)</label><input type="password" id="trPinNew" maxlength="4"></div>
-          </div>
-          <button class="btn btn-gold btn-sm" onclick="doTeacherPinReset()">PIN सेट करें</button>
-          <div id="trPinMsg" class="mt-3"></div>
-        </div>
         <div class="card">
-          <div class="card-title">🔓 Admin Reset — उपस्थिति / रेटिंग</div>
+          <div class="card-title">🔓 Admin Reset</div>
           <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Lock हटाकर उपस्थिति / रेटिंग बदलें।</p>
           <div class="form-group"><label>माह</label>
             <select id="rsMon" onchange="loadRsDates()">${monthOpts()}</select>
@@ -604,29 +389,6 @@ function atab(t){
     document.getElementById('at-'+x)?.classList.toggle('active',x===t);
     document.getElementById('ap-'+x)?.classList.toggle('hidden',x!==t);
   });
-  if(t==='rs'){loadRsDates();loadTeacherPinDropdown();}
-}
-
-async function loadTeacherPinDropdown(){
-  const sel=document.getElementById('trPinSel');
-  if(!sel)return;
-  try{
-    const teachers=await dbGet('teachers?select=id,salutation,name&order=name');
-    sel.innerHTML='<option value="">-- चुनें --</option>'+
-      (teachers||[]).map(t=>`<option value="${t.id}">${t.salutation} ${t.name}</option>`).join('');
-  }catch(e){}
-}
-
-async function doTeacherPinReset(){
-  const tid=g('trPinSel'),pin=g('trPinNew');
-  const msgEl=document.getElementById('trPinMsg');
-  if(!tid){msgEl.innerHTML='<div class="alert alert-err">शिक्षक चुनें।</div>';return;}
-  if(pin.length!==4){msgEl.innerHTML='<div class="alert alert-err">PIN 4 अंक का होना चाहिए।</div>';return;}
-  try{
-    await dbPatch('teachers?id=eq.'+tid,{pin});
-    msgEl.innerHTML='<div class="alert alert-ok">✅ PIN सफलतापूर्वक बदला गया!</div>';
-    toast('✅ शिक्षक का PIN बदल गया!');
-  }catch(e){msgEl.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>';}
 }
 
 async function saveAC(){
@@ -704,8 +466,8 @@ async function loadRsDates(){
   try{
     const dates=await dbGet('class_dates?month_year=eq.'+my+'&order=class_date');
     if(!dates||!dates.length){el.innerHTML='<div class="alert alert-info mt-3">इस माह कोई कक्षा तिथि नहीं।</div>';return;}
-    el.innerHTML='<div class="mt-3"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">कक्षा दिनांक चुनें:</div>'+
-      dates.map(d=>`<div class="chip" onclick="loadRsContent('${d.id}','${d.class_date}')">📅 ${fmtDate(d.class_date)}</div>`).join('')+'</div>';
+    el.innerHTML='<div class="mt-3"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">कक्षा तिथि चुनें:</div>'+
+      dates.map(d=>`<div class="chip" onclick="loadRsContent('${d.id}','${d.class_date}')">📅 ${d.class_date}</div>`).join('')+'</div>';
   }catch(e){el.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>';}
 }
 
@@ -725,7 +487,7 @@ async function loadRsContent(cdId,date){
     const wrap=document.createElement('div');
     wrap.className='card mt-3';wrap.style.padding='16px';
     const title=document.createElement('div');
-    title.className='card-title';title.textContent='📅 '+fmtDate(date)+' — Admin Reset';
+    title.className='card-title';title.textContent='📅 '+date+' — Admin Reset';
     wrap.appendChild(title);
     const msg=document.createElement('div');msg.id='rsMsg';wrap.appendChild(msg);
     const tWrap=document.createElement('div');tWrap.className='table-wrap';
@@ -834,20 +596,8 @@ function mAddTeacher(){
     </div>
     <div class="form-row">
       <div class="form-group"><label>📱 मोबाइल</label><input type="tel" id="tph" maxlength="10"></div>
-      <div class="form-group"><label>🎂 जन्म तिथि</label><input type="date" id="tdob"></div>
+      <div class="form-group"><label>🔐 PIN (4 अंक)*</label><input type="password" id="tpin" maxlength="4"></div>
     </div>
-    <div class="form-group">
-  <label>कक्षा</label>
-  <input type="text" id="tclass" placeholder="1">
-</div>
-async function doAddTeacher(){
-const assigned_class = g('tclass');
-assigned_class
-await dbPost('teachers',{
-   ...
-   assigned_class
-});
-    <div class="form-group"><label>🔐 PIN (4 अंक)*</label><input type="password" id="tpin" maxlength="4"></div>
     <div id="terr"></div>
     <div class="flex gap-3 mt-3">
       <button class="btn btn-gold btn-w" onclick="doAddTeacher()">जोड़ें</button>
@@ -856,22 +606,13 @@ await dbPost('teachers',{
 }
 
 async function doAddTeacher(){
-  const sal=g('ts'),name=g('tn'),rel=g('tr'),rnm=g('trn'),ph=g('tph'),pin=g('tpin'),dob=g('tdob');
+  const sal=g('ts'),name=g('tn'),rel=g('tr'),rnm=g('trn'),ph=g('tph'),pin=g('tpin');
   if(!name){merr('terr','नाम आवश्यक।');return;}
   if(pin.length!==4){merr('terr','PIN 4 अंक का होना चाहिए।');return;}
   try{
-   
-await dbPost('teachers',{
-  salutation: sal,
-  name,
-  relation_type: rel || null,
-  relation_name: rnm || null,
-  phone: ph || null,
-  dob: dob || null,
-  pin,
-  assigned_class
-});
-
+    await dbPost('teachers',{salutation:sal,name,relation_type:rel||null,relation_name:rnm||null,phone:ph||null,pin});
+    closeModal();showAdmin();
+  }catch(e){merr('terr','Error: '+e.message);}
 }
 
 function mEditTeacher(t){
@@ -887,40 +628,24 @@ function mEditTeacher(t){
     </div>
     <div class="form-row">
       <div class="form-group"><label>📱 मोबाइल</label><input type="tel" id="etph" value="${t.phone||''}" maxlength="10"></div>
-      <div class="form-group"><label>🎂 जन्म तिथि</label><input type="date" id="etdob" value="${t.dob||''}"></div>
+      <div class="form-group"><label>🔐 PIN*</label><input type="password" id="etpin" value="${t.pin||''}" maxlength="4"></div>
     </div>
-    <div class="form-group"><label>🔐 PIN*</label><input type="password" id="etpin" value="${t.pin||''}" maxlength="4"></div>
     <div id="eterr"></div>
     <div class="flex gap-3 mt-3">
       <button class="btn btn-gold btn-w" onclick="doEditTeacher('${t.id}')">सहेजें</button>
       <button class="btn btn-ghost" onclick="closeModal()">रद्द</button>
     </div>`);
-  <div class="form-group">
-  <label>कक्षा</label>
-  <input type="text"
-         id="etclass"
-         value="${t.assigned_class||''}">
-</div>
-
 }
 
 async function doEditTeacher(id){
-  const sal=g('ets'),name=g('etn'),rel=g('etr'),rnm=g('etrn'),ph=g('etph'),pin=g('etpin'),dob=g('etdob'); assigned_class=g('etclass');
+  const sal=g('ets'),name=g('etn'),rel=g('etr'),rnm=g('etrn'),ph=g('etph'),pin=g('etpin');
   if(!name){merr('eterr','नाम आवश्यक।');return;}
   if(pin.length!==4){merr('eterr','PIN 4 अंक।');return;}
   try{
-    await dbPatch('teachers?id=eq.'+id,{
-  salutation: sal,
-  name,
-  relation_type: rel || null,
-  relation_name: rnm || null,
-  phone: ph || null,
-  dob: dob || null,
-  pin,
-  assigned_class
-});
+    await dbPatch('teachers?id=eq.'+id,{salutation:sal,name,relation_type:rel||null,relation_name:rnm||null,phone:ph||null,pin});
+    closeModal();showAdmin();
+  }catch(e){merr('eterr','Error: '+e.message);}
 }
-
 
 // ══════════════════════════════════════════════
 // TEACHER
@@ -929,29 +654,16 @@ async function showTeacher(){
   document.getElementById('logoutBtn').classList.remove('hidden');
   setMain('<div class="spinner"></div>');
   try{
-    const cls = ME.data.assigned_class;
-
-const students = cls
-  ? await dbGet(
-      'students?class=eq.' +
-      encodeURIComponent(cls) +
-      '&order=name'
-    )
-  : await dbGet('students?order=name');
-
-window._stus = students || [];
+    const students=await dbGet('students?order=name');
+    window._stus=students||[];
     const t=ME.data;
-    
     setMain(`
       <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
         <div>
           <div class="section-title" style="margin:0;">📚 ${t.salutation} ${t.name}</div>
           <p style="font-size:12px;color:#64748b;">जैन पाठशाला — साझा कक्षा</p>
         </div>
-        <div class="flex gap-2">
-          <button class="btn btn-ghost btn-sm" onclick="mTeacherChangePin()">🔐 मेरा PIN बदलें</button>
-          <button class="btn btn-gold btn-sm" onclick="mAddStudent()">+ विद्यार्थी जोड़ें</button>
-        </div>
+        <button class="btn btn-gold btn-sm" onclick="mAddStudent()">+ विद्यार्थी जोड़ें</button>
       </div>
       <div class="alert alert-info mb-3" style="padding:8px 12px;font-size:12px;">ℹ️ सभी शिक्षकों को ये विद्यार्थी दिखते हैं।</div>
       <div class="tabs">
@@ -963,14 +675,13 @@ window._stus = students || [];
       <div id="tp-s">
         ${!window._stus.length?'<div class="empty"><div>👦</div><p>कोई विद्यार्थी नहीं।</p></div>':`
         <div class="table-wrap"><table>
-          <thead><tr><th>नाम</th><th>संबंध</th><th>📱 मोबाइल</th><th>जन्म तिथि</th><th>कक्षा</th><th>पता</th><th>कार्य</th></tr></thead>
+          <thead><tr><th>नाम</th><th>संबंध</th><th>📱 मोबाइल</th><th>जन्म तिथि</th><th>कक्षा</th><th>कार्य</th></tr></thead>
           <tbody>${window._stus.map(s=>`<tr>
             <td><b>${s.salutation} ${s.name}</b></td>
             <td>${s.relation_type||''} ${s.relation_name||''}</td>
             <td>${s.phone||'-'}</td>
-            <td>${fmtDate(s.dob)}</td>
+            <td>${s.dob?new Date(s.dob).toLocaleDateString('hi-IN'):'-'}</td>
             <td>${s.class||'-'}</td>
-            <td>${s.address||'-'}</td>
             <td><div class="flex gap-2">
               <button class="btn btn-sky btn-sm" onclick='mEditStudent(${JSON.stringify(s)})'>✏️</button>
               <button class="btn btn-red btn-sm" onclick="delStudent('${s.id}','${s.name}')">🗑️</button>
@@ -982,7 +693,7 @@ window._stus = students || [];
       <div id="tp-a" class="hidden">
         <div class="month-bar">
           <select id="aMon" onchange="loadAttDates()">${monthOpts()}</select>
-          <button class="btn btn-gold btn-sm" onclick="mAddClassDate('a')">+ कक्षा दिनांक</button>
+          <button class="btn btn-gold btn-sm" onclick="mAddClassDate('a')">+ कक्षा तिथि</button>
         </div>
         <div id="attDatesDiv"></div>
         <div id="attSheetDiv"></div>
@@ -991,7 +702,7 @@ window._stus = students || [];
       <div id="tp-p" class="hidden">
         <div class="month-bar">
           <select id="pMon" onchange="loadPerfDates()">${monthOpts()}</select>
-          <button class="btn btn-gold btn-sm" onclick="mAddClassDate('p')">+ कक्षा दिनांक</button>
+          <button class="btn btn-gold btn-sm" onclick="mAddClassDate('p')">+ कक्षा तिथि</button>
         </div>
         <div id="perfDatesDiv"></div>
         <div id="perfSheetDiv"></div>
@@ -1018,9 +729,9 @@ function mAddClassDate(tab){
   openModal(`
     <h3>📅 कक्षा तिथि जोड़ें</h3>
     <div class="confirm-box"><div class="ci">⚠️</div>
-      <p><b>सावधान!</b> सही दिनांक चुनें जिस दिन कक्षा हुई।<br>यह दिनांक सभी शिक्षकों को दिखेगी।</p>
+      <p><b>सावधान!</b> सही तिथि चुनें जिस दिन कक्षा हुई।<br>यह तिथि सभी शिक्षकों को दिखेगी।</p>
     </div>
-    <div class="form-group"><label>कक्षा का दिनांक *</label><input type="date" id="cdDate" max="${today()}"></div>
+    <div class="form-group"><label>कक्षा की तिथि *</label><input type="date" id="cdDate" max="${today()}"></div>
     <div id="cderr"></div>
     <div class="flex gap-3 mt-3">
       <button class="btn btn-gold btn-w" onclick="doAddClassDate('${tab}')">✅ जोड़ें</button>
@@ -1030,17 +741,17 @@ function mAddClassDate(tab){
 
 async function doAddClassDate(tab){
   const date=g('cdDate');
-  if(!date){merr('cderr','दिनांक आवश्यक।');return;}
-  if(date>today()){merr('cderr','भविष्य का दिनांक नहीं।');return;}
+  if(!date){merr('cderr','तिथि आवश्यक।');return;}
+  if(date>today()){merr('cderr','भविष्य की तिथि नहीं।');return;}
   const my=date.substring(0,7);
   try{
     await dbPost('class_dates',{class_date:date,month_year:my});
     closeModal();
     if(tab==='a'){document.getElementById('aMon').value=my;loadAttDates();}
     else{document.getElementById('pMon').value=my;loadPerfDates();}
-    toast('📅 '+fmtDate(date)+' जोड़ी गई ✓');
+    toast('📅 '+date+' जोड़ी गई ✓');
   }catch(e){
-    if(e.message.includes('unique')||e.message.includes('duplicate')){merr('cderr','यह दिनांक पहले से जोड़ी जा चुकी है।');}
+    if(e.message.includes('unique')||e.message.includes('duplicate')){merr('cderr','यह तिथि पहले से जोड़ी जा चुकी है।');}
     else merr('cderr','Error: '+e.message);
   }
 }
@@ -1051,9 +762,9 @@ async function loadAttDates(){
   const my=document.getElementById('aMon')?.value;
   try{
     const dates=await dbGet('class_dates?month_year=eq.'+my+'&order=class_date');
-    if(!dates||!dates.length){el.innerHTML='<div class="alert alert-info">इस माह कोई दिनांक नहीं। "+ कक्षा दिनांक" दबाएं।</div>';return;}
-    el.innerHTML='<div style="margin-bottom:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">📅 दिनांक चुनें:</div>'+
-      dates.map(d=>`<div class="chip" onclick="loadAttSheet('${d.id}','${d.class_date}')">📅 ${fmtDate(d.class_date)}</div>`).join('')+'</div>';
+    if(!dates||!dates.length){el.innerHTML='<div class="alert alert-info">इस माह कोई तिथि नहीं। "+ कक्षा तिथि" दबाएं।</div>';return;}
+    el.innerHTML='<div style="margin-bottom:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">📅 तिथि चुनें:</div>'+
+      dates.map(d=>`<div class="chip" onclick="loadAttSheet('${d.id}','${d.class_date}')">📅 ${d.class_date}</div>`).join('')+'</div>';
   }catch(e){el.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>';}
 }
 
@@ -1068,28 +779,18 @@ async function loadAttSheet(cdId,date){
     const ex=await dbGet('attendance?class_date_id=eq.'+cdId+'&select=student_id,status,locked,edited_once');
     const sm={};(ex||[]).forEach(r=>sm[r.student_id]=r);
     el.innerHTML=`<div class="card" style="padding:16px;">
-      <div class="card-title">📅 ${fmtDate(date)} — उपस्थिति</div>
+      <div class="card-title">📅 ${date} — उपस्थिति</div>
       <div style="font-size:12px;color:#64748b;margin-bottom:12px;">🔒 = Lock हो चुका (Admin ही बदल सकता है)</div>
       <div id="attMsg-${cdId}" class="mb-3"></div>
       ${stu.map(s=>{
         const rec=sm[s.id];
         const locked=rec?.locked&&rec?.edited_once;
-        const isPresent=rec?.status==='present';
-        const isAbsent=rec?.status==='absent';
-        const pStyle=isPresent
-          ? "background:linear-gradient(160deg,#4ade80,#16a34a);color:#fff;box-shadow:0 2px 0 #15803d;top:2px;border:2px solid #16a34a;"
-          : "background:#fff;color:#16a34a;box-shadow:0 4px 0 #f59e0b;top:0;border:2px solid #f59e0b;";
-        const aStyle=isAbsent
-          ? "background:linear-gradient(160deg,#f87171,#dc2626);color:#fff;box-shadow:0 2px 0 #991b1b;top:2px;border:2px solid #dc2626;"
-          : "background:#fff;color:#dc2626;box-shadow:0 4px 0 #f59e0b;top:0;border:2px solid #f59e0b;";
         return `<div class="att-row">
           <div class="att-name">${s.salutation} ${s.name}${locked?'<span class="locked-tag">🔒</span>':''}</div>
-          <button id="ap-${cdId}-${s.id}"
-            onclick="${locked?`showLockMsg('attMsg-${cdId}')`:`markAtt('${s.id}','present','${date}','${my}','${cdId}')`}"
-            style="width:38px;height:38px;border-radius:8px;cursor:${locked?'not-allowed':'pointer'};font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;position:relative;transition:all .15s;${pStyle}">✓</button>
-          <button id="aa-${cdId}-${s.id}"
-            onclick="${locked?`showLockMsg('attMsg-${cdId}')`:`markAtt('${s.id}','absent','${date}','${my}','${cdId}')`}"
-            style="width:38px;height:38px;border-radius:8px;cursor:${locked?'not-allowed':'pointer'};font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;position:relative;transition:all .15s;${aStyle}">✗</button>
+          <button class="att-btn p ${rec?.status==='present'?'on':''}" id="ap-${cdId}-${s.id}"
+            onclick="${locked?`showLockMsg('attMsg-${cdId}')`:`markAtt('${s.id}','present','${date}','${my}','${cdId}')`}" style="width:38px;height:38px;border-radius:8px;border:none;cursor:${locked?'not-allowed':'pointer'};font-size:16px;display:flex;align-items:center;justify-content:center;background:${rec?.status==='present'?'linear-gradient(160deg,#4ade80,#16a34a)':'linear-gradient(160deg,#86efac,#16a34a)'};color:#fff;box-shadow:${rec?.status==='present'?'0 2px 0 #15803d':'0 4px 0 #15803d'};position:relative;top:${rec?.status==='present'?'2px':'0'};transition:all .12s;">✓</button>
+          <button class="att-btn a ${rec?.status==='absent'?'on':''}" id="aa-${cdId}-${s.id}"
+            onclick="${locked?`showLockMsg('attMsg-${cdId}')`:`markAtt('${s.id}','absent','${date}','${my}','${cdId}')`}" style="width:38px;height:38px;border-radius:8px;border:none;cursor:${locked?'not-allowed':'pointer'};font-size:16px;display:flex;align-items:center;justify-content:center;background:${rec?.status==='absent'?'linear-gradient(160deg,#f87171,#dc2626)':'linear-gradient(160deg,#fca5a5,#dc2626)'};color:#fff;box-shadow:${rec?.status==='absent'?'0 2px 0 #991b1b':'0 4px 0 #991b1b'};position:relative;top:${rec?.status==='absent'?'2px':'0'};transition:all .12s;">✗</button>
         </div>`;
       }).join('')}
     </div>`;
@@ -1106,21 +807,19 @@ async function markAtt(sid,status,date,my,cdId){
   if(pBtn){
     if(status==='present'){
       pBtn.style.background='linear-gradient(160deg,#4ade80,#16a34a)';
-      pBtn.style.color='#fff';pBtn.style.border='2px solid #16a34a';
       pBtn.style.boxShadow='0 2px 0 #15803d';pBtn.style.top='2px';
     } else {
-      pBtn.style.background='#fff';pBtn.style.color='#16a34a';pBtn.style.border='2px solid #f59e0b';
-      pBtn.style.boxShadow='0 4px 0 #f59e0b';pBtn.style.top='0';
+      pBtn.style.background='linear-gradient(160deg,#86efac,#16a34a)';
+      pBtn.style.boxShadow='0 4px 0 #15803d';pBtn.style.top='0';
     }
   }
   if(aBtn){
     if(status==='absent'){
       aBtn.style.background='linear-gradient(160deg,#f87171,#dc2626)';
-      aBtn.style.color='#fff';aBtn.style.border='2px solid #dc2626';
       aBtn.style.boxShadow='0 2px 0 #991b1b';aBtn.style.top='2px';
     } else {
-      aBtn.style.background='#fff';aBtn.style.color='#dc2626';aBtn.style.border='2px solid #f59e0b';
-      aBtn.style.boxShadow='0 4px 0 #f59e0b';aBtn.style.top='0';
+      aBtn.style.background='linear-gradient(160deg,#fca5a5,#dc2626)';
+      aBtn.style.boxShadow='0 4px 0 #991b1b';aBtn.style.top='0';
     }
   }
 
@@ -1154,9 +853,9 @@ async function loadPerfDates(){
   const my=document.getElementById('pMon')?.value;
   try{
     const dates=await dbGet('class_dates?month_year=eq.'+my+'&order=class_date');
-    if(!dates||!dates.length){el.innerHTML='<div class="alert alert-info">इस माह कोई दिनांक नहीं। "+ कक्षा दिनांक" दबाएं।</div>';return;}
-    el.innerHTML='<div style="margin-bottom:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">📅 दिनांक चुनें:</div>'+
-      dates.map(d=>`<div class="chip" onclick="loadPerfSheet('${d.id}','${d.class_date}')">📅 ${fmtDate(d.class_date)}</div>`).join('')+'</div>';
+    if(!dates||!dates.length){el.innerHTML='<div class="alert alert-info">इस माह कोई तिथि नहीं। "+ कक्षा तिथि" दबाएं।</div>';return;}
+    el.innerHTML='<div style="margin-bottom:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">📅 तिथि चुनें:</div>'+
+      dates.map(d=>`<div class="chip" onclick="loadPerfSheet('${d.id}','${d.class_date}')">📅 ${d.class_date}</div>`).join('')+'</div>';
   }catch(e){el.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>';}
 }
 
@@ -1170,7 +869,7 @@ async function loadPerfSheet(cdId,date){
     const ex=await dbGet('performance?class_date_id=eq.'+cdId+'&select=student_id,rating,locked,edited_once');
     const pm={};(ex||[]).forEach(r=>pm[r.student_id]=r);
     el.innerHTML=`<div class="card" style="padding:16px;">
-      <div class="card-title">📅 ${fmtDate(date)} — प्रदर्शन रेटिंग</div>
+      <div class="card-title">📅 ${date} — प्रदर्शन रेटिंग</div>
       <div style="font-size:12px;color:#64748b;margin-bottom:12px;">★1=कमज़ोर ★5=श्रेष्ठ | 🔒=Lock</div>
       <div id="perfMsg-${cdId}" class="mb-3"></div>
       ${stu.map(s=>{
@@ -1301,37 +1000,8 @@ async function delStudent(id,name){
   catch(e){toast('Error: '+e.message);}
 }
 
-// Teacher self-service PIN change
-function mTeacherChangePin(){
-  openModal(`
-    <h3>🔐 मेरा PIN बदलें</h3>
-    <div class="form-group"><label>वर्तमान PIN</label><input type="password" id="tcCur" maxlength="4"></div>
-    <div class="form-group"><label>नया PIN</label><input type="password" id="tcNew" maxlength="4"></div>
-    <div class="form-group"><label>नया PIN पुनः</label><input type="password" id="tcRe" maxlength="4"></div>
-    <div id="tcErr"></div>
-    <div class="flex gap-3 mt-3">
-      <button class="btn btn-gold btn-w" onclick="doTeacherChangePin()">बदलें</button>
-      <button class="btn btn-ghost" onclick="closeModal()">रद्द</button>
-    </div>`);
-}
-
-async function doTeacherChangePin(){
-  const cur=g('tcCur'),nw=g('tcNew'),re=g('tcRe');
-  if(cur!==ME.data.pin){merr('tcErr','वर्तमान PIN गलत है।');return;}
-  if(nw.length!==4){merr('tcErr','नया PIN 4 अंक का होना चाहिए।');return;}
-  if(nw!==re){merr('tcErr','नया PIN मेल नहीं खाता।');return;}
-  try{
-    await dbPatch('teachers?id=eq.'+ME.data.id,{pin:nw});
-    ME.data.pin=nw;
-    saveMe(ME);
-    closeModal();
-    toast('✅ आपका PIN बदल गया!');
-  }catch(e){merr('tcErr','Error: '+e.message);}
-}
-
 // ── PARENT ───────────────────────────────────
 function showParentSearch(){
-  document.getElementById('liveClock')?.classList.remove('hidden');
   setMain(`
     <button class="back-btn" onclick="showLanding()">← वापस</button>
     <div class="card" style="max-width:460px;margin:0 auto;">
@@ -1371,7 +1041,7 @@ async function showParentView(sid){
     const[sArr,att,perf,awards]=await Promise.all([
       dbGet('students?id=eq.'+sid+'&limit=1'),
       dbGet('attendance?student_id=eq.'+sid+'&order=date.desc'),
-      dbGet('performance?student_id=eq.'+sid+'&select=rating,month_year,class_date_id,class_dates(class_date)&order=month_year.desc'),
+      dbGet('performance?student_id=eq.'+sid+'&select=rating,month_year,class_date_id,class_dates(class_date)&order=created_at.desc'),
       dbGet('monthly_awards?student_id=eq.'+sid)
     ]);
     const s=sArr?.[0];if(!s){showParentSearch();return;}
@@ -1409,7 +1079,7 @@ async function showParentView(sid){
         <div class="card-title">कक्षावार रेटिंग</div>
         ${(perf||[]).map(p=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e0f2fe;">
-            <span style="font-size:13px;color:#64748b;">${p.class_dates?.class_date?fmtDate(p.class_dates.class_date):(p.month_year||'-')}</span>
+            <span style="font-size:13px;color:#64748b;">${p.class_dates?.class_date||p.month_year||'-'}</span>
             <div>${[1,2,3,4,5].map(i=>`<span style="color:${i<=p.rating?'var(--gold)':'#bae6fd'};font-size:18px;">★</span>`).join('')}</div>
           </div>`).join('')||'<p style="color:#64748b;font-size:13px;">कोई रेटिंग नहीं।</p>'}
       </div>`);
@@ -1420,15 +1090,6 @@ async function showParentView(sid){
 function setMain(h){document.getElementById('appMain').innerHTML=h;}
 function g(id){return document.getElementById(id)?.value?.trim()||'';}
 function today(){return new Date().toISOString().split('T')[0];}
-function fmtDate(isoDate){
-  if(!isoDate)return '-';
-  const d=new Date(isoDate+'T00:00:00');
-  if(isNaN(d))return '-';
-  const dd=String(d.getDate()).padStart(2,'0');
-  const mm=String(d.getMonth()+1).padStart(2,'0');
-  const yyyy=d.getFullYear();
-  return dd+'-'+mm+'-'+yyyy;
-}
 function monthOpts(){
   const d=new Date(),opts=[];
   for(let i=0;i<12;i++){
