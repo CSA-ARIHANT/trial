@@ -318,6 +318,7 @@ async function showAdmin(){
 <td>${t.phone||'-'}</td>
 <td>${t.assigned_class||'-'}</td>
 <td>
+${t.assigned_class||'-'}
   <div class="flex gap-2">
 ${t.phone||'-'} ${t.assigned_class||'-'}
            
@@ -329,7 +330,7 @@ ${t.phone||'-'} ${t.assigned_class||'-'}
       </div>
 
       <div id="ap-s" class="hidden">
-        <div class="alert alert-info mb-3">सभी शिक्षकों को ये विद्यार्थी दिखते हैं — साझा कक्षा।</div>
+        ✅ शिक्षक केवल कक्षा ${t.assigned_class} के विद्यार्थी देख रहे हैं।
         ${!sc?'<div class="empty"><div>👦</div><p>कोई विद्यार्थी नहीं।</p></div>':`
         <div class="table-wrap"><table>
           <thead><tr><th>नाम</th><th>संबंध</th><th>मोबाइल</th><th>कक्षा</th></tr></thead>
