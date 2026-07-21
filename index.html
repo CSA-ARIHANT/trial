@@ -316,11 +316,11 @@ async function showAdmin(){
             <td><b>${t.salutation} ${t.name}</b></td>
             <td>${t.relation_type||''} ${t.relation_name||''}</td>
 <td>${t.phone||'-'}</td>
-
+<td>${t.assigned_class||'-'}
 <td>
 
   <div class="flex gap-2">
-${t.phone||'-'} ${t.assigned_class||'-'}
+
            
               <button class="btn btn-sky btn-sm" onclick='mEditTeacher(${JSON.stringify(t)})'>✏️</button>
               <button class="btn btn-red btn-sm" onclick="delTeacher('${t.id}','${t.name}')">🗑️</button>
