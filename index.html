@@ -654,14 +654,27 @@ async function showTeacher(){
   document.getElementById('logoutBtn').classList.remove('hidden');
   setMain('<div class="spinner"></div>');
   try{
-    const students=await dbGet('students?order=name');
-    window._stus=students||[];
+const cls = ME.data.assigned_class;
+
+const students = cls
+  ? await dbGet(
+      'students?class=eq.' +
+      encodeURIComponent(cls) +
+      '&order=name'
+    )
+  : await dbGet('students?order=name');
+
+window._stus = students || [];
+
+    
     const t=ME.data;
     setMain(`
       <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
         <div>
           <div class="section-title" style="margin:0;">📚 ${t.salutation} ${t.name}</div>
-          <p style="font-size:12px;color:#64748b;">जैन पाठशाला — साझा कक्षा</p>
+        <p style="font-size:12px;color:#64748b;">
+  जैन पाठशाला — कक्षा ${t.assigned_class || 'साझा'}
+</p>
         </div>
         <button class="btn btn-gold btn-sm" onclick="mAddStudent()">+ विद्यार्थी जोड़ें</button>
       </div>
