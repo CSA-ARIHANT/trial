@@ -860,9 +860,18 @@ async function doAddTeacher(){
   if(!name){merr('terr','नाम आवश्यक।');return;}
   if(pin.length!==4){merr('terr','PIN 4 अंक का होना चाहिए।');return;}
   try{
-    await dbPost('teachers',{salutation:sal,name,relation_type:rel||null,relation_name:rnm||null,phone:ph||null,dob:dob||null,pin});
-    closeModal();showAdmin();
-  }catch(e){merr('terr','Error: '+e.message);}
+   
+await dbPost('teachers',{
+  salutation: sal,
+  name,
+  relation_type: rel || null,
+  relation_name: rnm || null,
+  phone: ph || null,
+  dob: dob || null,
+  pin,
+  assigned_class
+});
+
 }
 
 function mEditTeacher(t){
@@ -896,17 +905,19 @@ function mEditTeacher(t){
 }
 
 async function doEditTeacher(id){
-  const sal=g('ets'),name=g('etn'),rel=g('etr'),rnm=g('etrn'),ph=g('etph'),pin=g('etpin'),dob=g('etdob');
+  const sal=g('ets'),name=g('etn'),rel=g('etr'),rnm=g('etrn'),ph=g('etph'),pin=g('etpin'),dob=g('etdob'); assigned_class=g('etclass');
   if(!name){merr('eterr','नाम आवश्यक।');return;}
   if(pin.length!==4){merr('eterr','PIN 4 अंक।');return;}
   try{
-    await dbPatch('teachers?id=eq.'+id,{salutation:sal,name,relation_type:rel||null,relation_name:rnm||null,phone:ph||null,dob:dob||null,pin});
-    closeModal();showAdmin();
-  }catch(e){merr('eterr','Error: '+e.message);}
-const assigned_class = g('etclass');
-await dbPatch('teachers?id=eq.'+id,{
-   ...
-   assigned_class
+    await dbPatch('teachers?id=eq.'+id,{
+  salutation: sal,
+  name,
+  relation_type: rel || null,
+  relation_name: rnm || null,
+  phone: ph || null,
+  dob: dob || null,
+  pin,
+  assigned_class
 });
 }
 
