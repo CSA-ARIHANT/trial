@@ -836,6 +836,17 @@ function mAddTeacher(){
       <div class="form-group"><label>📱 मोबाइल</label><input type="tel" id="tph" maxlength="10"></div>
       <div class="form-group"><label>🎂 जन्म तिथि</label><input type="date" id="tdob"></div>
     </div>
+    <div class="form-group">
+  <label>कक्षा</label>
+  <input type="text" id="tclass" placeholder="1">
+</div>
+async function doAddTeacher(){
+const assigned_class = g('tclass');
+assigned_class
+await dbPost('teachers',{
+   ...
+   assigned_class
+});
     <div class="form-group"><label>🔐 PIN (4 अंक)*</label><input type="password" id="tpin" maxlength="4"></div>
     <div id="terr"></div>
     <div class="flex gap-3 mt-3">
@@ -875,6 +886,13 @@ function mEditTeacher(t){
       <button class="btn btn-gold btn-w" onclick="doEditTeacher('${t.id}')">सहेजें</button>
       <button class="btn btn-ghost" onclick="closeModal()">रद्द</button>
     </div>`);
+  <div class="form-group">
+  <label>कक्षा</label>
+  <input type="text"
+         id="etclass"
+         value="${t.assigned_class||''}">
+</div>
+
 }
 
 async function doEditTeacher(id){
@@ -885,6 +903,11 @@ async function doEditTeacher(id){
     await dbPatch('teachers?id=eq.'+id,{salutation:sal,name,relation_type:rel||null,relation_name:rnm||null,phone:ph||null,dob:dob||null,pin});
     closeModal();showAdmin();
   }catch(e){merr('eterr','Error: '+e.message);}
+const assigned_class = g('etclass');
+await dbPatch('teachers?id=eq.'+id,{
+   ...
+   assigned_class
+});
 }
 
 
@@ -895,9 +918,17 @@ async function showTeacher(){
   document.getElementById('logoutBtn').classList.remove('hidden');
   setMain('<div class="spinner"></div>');
   try{
-    const students=await dbGet('students?order=name');
-    window._stus=students||[];
+    const cls = ME.data.assigned_class;
+
+const students = await dbGet(
+  'students?class=eq.' +
+  encodeURIComponent(cls) +
+  '&order=name'
+);
+
+window._stus = students || [];
     const t=ME.data;
+    
     setMain(`
       <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
         <div>
