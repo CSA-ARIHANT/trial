@@ -311,6 +311,7 @@ async function showAdmin(){
         ${!tc?'<div class="empty"><div>📚</div><p>कोई शिक्षक नहीं।</p></div>':`
         <div class="table-wrap"><table>
           <thead><tr><th>नाम</th><th>संबंध</th><th>मोबाइल</th><th>कक्षा</th><th>कार्य</th></tr></thead>
+          ${t.phone||'-'}
           <tbody>${teachers.map(t=>`<tr>
             <td><b>${t.salutation} ${t.name}</b></td>
             <td>${t.relation_type||''} ${t.relation_name||''}</td>
@@ -318,7 +319,7 @@ async function showAdmin(){
 <td>${t.assigned_class||'-'}</td>
 <td>
   <div class="flex gap-2">
-
+${t.phone||'-'} ${t.assigned_class||'-'}
            
               <button class="btn btn-sky btn-sm" onclick='mEditTeacher(${JSON.stringify(t)})'>✏️</button>
               <button class="btn btn-red btn-sm" onclick="delTeacher('${t.id}','${t.name}')">🗑️</button>
